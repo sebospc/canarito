@@ -50,8 +50,8 @@ the line `AEA registered` in the log. Before it, the receptor cannot get anythin
 
 <p align="center"><img src="docs/connect.svg" alt="Install ntfy, subscribe to your link, and the next alert arrives on that device" width="100%"></p>
 
-`setup` prints a private link such as `https://ntfy.sh/canarito-3f9a…`. Subscribe to it from
-the ntfy app on [iPhone](https://apps.apple.com/app/ntfy/id1625396347) or
+`setup` prints a private topic name such as `canarito-3f9a…`. In the ntfy app, tap **+**, type
+that name and tap Subscribe. That is all "subscribe" means. You can do it from the ntfy app on [iPhone](https://apps.apple.com/app/ntfy/id1625396347) or
 [Android](https://play.google.com/store/apps/details?id=io.heckel.ntfy), from
 [ntfy.sh/app](https://ntfy.sh/app) in any browser, or from anything that can read a URL:
 Home Assistant has an ntfy integration, and `curl -s ntfy.sh/<topic>/json` works in a
@@ -125,7 +125,9 @@ Any app can feed the location link. The whole contract is one JSON message:
 <details>
 <summary>Recipes: OwnTracks, Home Assistant, iPhone Shortcuts</summary>
 
-- **OwnTracks**: `setup --follow` does it for you. We tested the receptor side with messages in
+- **OwnTracks**: `setup --follow` does it for you. On iPhone, first turn on remote
+  configuration in OwnTracks' Settings, or it refuses the setup link with "URI or file
+  configuration not allowed". Without the link: mode HTTP, URL = the location link. We tested the receptor side with messages in
   OwnTracks' format; a real phone has not been tested yet.
 - **Home Assistant** (not tested yet): post the phone's position whenever it changes.
 

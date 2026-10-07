@@ -504,6 +504,15 @@ class Emulator:
         self.adb("shell", "cmd", "notification", "allow_listener", LISTENER, check=True)
 
 
+def topic_of(ntfy_url):
+    return urllib.parse.urlsplit(ntfy_url).path.strip("/")
+
+
+def server_hint(ntfy_url):
+    host = urllib.parse.urlsplit(ntfy_url).netloc
+    return "" if host == "ntfy.sh" else f"Turn on \"Use another server\" and enter https://{host}. "
+
+
 def setup(args):
     CONFIG_DIR.mkdir(parents=True, exist_ok=True)
     existing = json.loads(config_path(args.name).read_text()) if config_path(args.name).exists() else {}
@@ -555,11 +564,11 @@ Receptor "{args.name}" ready at {args.lat}, {args.lon}.
 
 On each device that should get the alerts:
   1. Install ntfy (App Store, Google Play) or open https://ntfy.sh/app in a browser.
-  2. Subscribe to: {notify_url}
+  2. In ntfy, tap + and type this topic name: {topic_of(notify_url)}
+     {server_hint(notify_url)}Then tap Subscribe.
   3. Allow notifications. On Android, set the subscription to "urgent" so it can ring.
 
-For you, who runs this computer, also subscribe to:
-  {admin_url}
+For you, who runs this computer, add a second topic the same way: {topic_of(admin_url)}
 It tells you when this receptor stops working and when it is back, and about quakes it missed.
 
 Then start it, and leave it running:
@@ -570,10 +579,12 @@ Then start it, and leave it running:
         sent = post_notice(notify_url, config["notify_token"], "Toca aquí con OwnTracks instalado para que Canarito "
                            "te siga. / Tap here with OwnTracks installed so Canarito can follow you.", click=link)
         print(f"""This receptor follows {args.name}. On {args.name}'s phone:
-  1. Subscribe ntfy to the link above.
-  2. Install OwnTracks (App Store or Google Play).
+  1. Add the alert topic above in ntfy.
+  2. Install OwnTracks (App Store or Google Play). On iPhone, open its Settings and turn on
+     remote configuration first: OwnTracks blocks setup links until you do.
   3. Tap the Canarito message that just arrived{"" if sent else " (it could not be sent; open the link below instead)"}.
      It opens OwnTracks already set up. The same link: {link}
+  If the link does not work, set OwnTracks by hand: mode HTTP, URL {location_url}
 """)
         if urllib.parse.urlsplit(location_url).hostname == "ntfy.sh":
             print("The position passes through ntfy.sh on its way to this computer. ntfy.sh does not store it,\n"

@@ -251,6 +251,13 @@ class FollowingReceptorTest(unittest.TestCase):
         self.assertEqual(settings["mode"], 3)
 
 
+class SubscribeTextTest(unittest.TestCase):
+    def test_the_topic_is_what_people_type_in_ntfy(self):
+        self.assertEqual(canarito.topic_of("https://ntfy.sh/canarito-ab12"), "canarito-ab12")
+        self.assertEqual(canarito.server_hint("https://ntfy.sh/canarito-ab12"), "")
+        self.assertIn("https://ntfy.example.org", canarito.server_hint("https://ntfy.example.org/canarito-ab12"))
+
+
 class ApkDownloadTest(unittest.TestCase):
     def test_a_file_with_another_hash_is_never_written(self):
         with tempfile.TemporaryDirectory() as folder:
