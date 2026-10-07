@@ -57,6 +57,10 @@ that name and tap Subscribe. That is all "subscribe" means. You can do it from t
 Home Assistant has an ntfy integration, and `curl -s ntfy.sh/<topic>/json` works in a
 script. On Android, mark the subscription as urgent so it rings.
 
+If messages show inside ntfy on an iPhone but no notification appears, delete ntfy, install
+it again, tap Allow when it asks about notifications, and only then add your topics. Adding
+topics before allowing notifications can leave the phone without push.
+
 On iPhone, ntfy cannot ring through silent mode or Focus: Apple keeps that for official alert
 apps. If you want something louder, a siren, a speaker or a light, subscribe it to the same
 link. Anything that can read ntfy can act on the alert.
