@@ -25,19 +25,22 @@ push service, carries the alert to your devices. If you want everything under yo
 
 ## Start
 
-You need macOS or Linux, Python 3.9 or newer, JDK 17, and the
+You need macOS or Linux, Python 3.9 or newer, and the
 [Android SDK command line tools](https://developer.android.com/studio#command-line-tools-only)
 (`brew install --cask android-commandlinetools` on a Mac).
 
 ```bash
 export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools   # where yours is
 
-echo "sdk.dir=$ANDROID_HOME" > local.properties
-./gradlew :android:assembleDebug                                   # the app for the emulator
-
 python3 canarito.py setup --name home --lat 4.711 --lon -74.072    # your place, from any map
 python3 canarito.py run --name home                                # leave it running
 ```
+
+If you did not build the app, `run` downloads it from the
+[v0.1.0 release](https://github.com/sebospc/canarito/releases/tag/v0.1.0) and installs it
+only if its SHA-256 matches the one written in `canarito.py`. To build it yourself instead
+(JDK 17): `echo "sdk.dir=$ANDROID_HOME" > local.properties && ./gradlew :android:assembleDebug`.
+It is a debug build. Install it only in the emulator, never on your own phone.
 
 The first `setup` downloads Android, a few GB. `run` boots the emulator in about two minutes,
 but Google's earthquake code inside it takes 15 to 60 minutes more the first time. Wait for

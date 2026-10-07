@@ -1,5 +1,6 @@
 """python3 -m unittest test_canarito"""
 import base64
+import hashlib
 import json
 import os
 import tempfile
@@ -248,6 +249,19 @@ class FollowingReceptorTest(unittest.TestCase):
         settings = json.loads(base64.b64decode(urllib.parse.unquote(link.split("inline=", 1)[1])))
         self.assertEqual(settings["url"], "https://ntfy.sh/canarito-where-x?cache=no")
         self.assertEqual(settings["mode"], 3)
+
+
+class ApkDownloadTest(unittest.TestCase):
+    def test_a_file_with_another_hash_is_never_written(self):
+        with tempfile.TemporaryDirectory() as folder:
+            source = Path(folder) / "served.apk"
+            source.write_bytes(b"tampered")
+            target = Path(folder) / "out.apk"
+            good = hashlib.sha256(b"tampered").hexdigest()
+            self.assertFalse(canarito.verified_download(source.as_uri(), "0" * 64, target))
+            self.assertFalse(target.exists())
+            self.assertTrue(canarito.verified_download(source.as_uri(), good, target))
+            self.assertEqual(target.read_bytes(), b"tampered")
 
 
 if __name__ == "__main__":

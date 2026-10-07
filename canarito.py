@@ -7,12 +7,13 @@ place you choose, and forward them through ntfy to any device you subscribe.
     canarito.py test --name home
     canarito.py evidence --name home
 
-Needs Python 3.9+, a JDK only if you build the APK yourself, and the Android SDK command line
-tools (sdkmanager, avdmanager) with ANDROID_HOME set. Read README.md first: this is not an
+Needs Python 3.9+ and the Android SDK command line tools (sdkmanager, avdmanager) with
+ANDROID_HOME set; a JDK only if you build the APK yourself, otherwise run downloads it. Read README.md first: this is not an
 official alert system and it can miss alerts.
 """
 import argparse
 import base64
+import hashlib
 import json
 import os
 import platform
@@ -31,6 +32,10 @@ PACKAGE = "app.canarito.receptor"
 LISTENER = f"{PACKAGE}/.CaptureService"
 CONFIG_DIR = Path(os.environ.get("CANARITO_HOME", Path.home() / ".canarito"))
 DEFAULT_APK = Path(__file__).resolve().parent / "android/build/outputs/apk/debug/android-debug.apk"
+# Used only when nothing was built locally. Pinned to one release and checked against this hash,
+# so a replaced file on GitHub is refused instead of installed.
+RELEASE_APK_URL = "https://github.com/sebospc/canarito/releases/download/v0.1.0/android-debug.apk"
+RELEASE_APK_SHA256 = "c5f5612ba26399467896444e394431cf5358fa228452c6bd0bf073385f141239"
 API_LEVEL = 35
 # Play Services asks for a GPS fix once, some 5-7 minutes into a boot, and AEA keeps that
 # position. A geo fix sent later changes nothing, so it is repeated through the whole window.
@@ -575,11 +580,40 @@ Then start it, and leave it running:
                   "but it sees it. To keep it on your own server, run setup again with --location-url.\n")
 
 
+def verified_download(url, expected_sha256, target):
+    """Downloads url to target only when its SHA-256 matches; returns whether it did."""
+    with urllib.request.urlopen(urllib.request.Request(url, headers={"User-Agent": "canarito"}),
+                                timeout=60) as response:
+        data = response.read()
+    if hashlib.sha256(data).hexdigest() != expected_sha256:
+        return False
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(data)
+    return True
+
+
+def find_apk(path):
+    apk = Path(path)
+    if apk.exists():
+        return apk
+    if apk != DEFAULT_APK:
+        sys.exit(f"No APK at {apk}.")
+    released = CONFIG_DIR / f"canarito-{RELEASE_APK_SHA256[:12]}.apk"
+    if released.exists() and hashlib.sha256(released.read_bytes()).hexdigest() == RELEASE_APK_SHA256:
+        return released
+    print(f"No local build. Downloading the released APK from {RELEASE_APK_URL}")
+    try:
+        if verified_download(RELEASE_APK_URL, RELEASE_APK_SHA256, released):
+            return released
+        sys.exit("The downloaded APK does not match the expected SHA-256. Not installing it. "
+                 "Build it yourself (README.md).")
+    except OSError as error:
+        sys.exit(f"Could not download the APK ({error}). Build it yourself (README.md) or pass --apk.")
+
+
 def run(args):
     config = load_config(args.name)
-    apk = Path(args.apk)
-    if not apk.exists():
-        sys.exit(f"No APK at {apk}. Build it (README.md) or pass --apk.")
+    apk = find_apk(args.apk)
     links = {"family": config["notify_url"], "admin": config.get("admin_url") or config["notify_url"]}
     health = Health(config, lambda audience, text, priority: post_notice(
         links[audience], config.get("notify_token"), text, priority))
