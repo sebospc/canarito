@@ -139,10 +139,9 @@ users get the alert before the shaking.
 ## History
 
 Canarito started in September 2026 as a paid iPhone app for Colombia and Chile, with a fleet
-of emulators on AWS, a gateway to Apple's push service and a native iOS app. One person built
-it with a team of AI coding agents. The plan stopped on 7-Oct-2026, before launch: the terms
-problem had no answer for a paid product, the servers cost money every month, and the author
-needed the time for another project. This repository keeps the part one family can run alone.
+of emulators on AWS, a gateway to Apple's push service and a native iOS app. It stopped before
+launch. A paid product had no answer to the terms problem, and the servers cost money every
+month. This repository keeps the part one family can run alone.
 
 Ideas nobody has built yet: read the emulator's real location age instead of rebooting every
 18 hours, and run one receptor for a whole neighborhood. Official access to the alert feed,
