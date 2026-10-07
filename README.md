@@ -63,7 +63,9 @@ topics before allowing notifications can leave the phone without push.
 
 On iPhone, ntfy cannot ring through silent mode or Focus: Apple keeps that for official alert
 apps. If you want something louder, a siren, a speaker or a light, subscribe it to the same
-link. Anything that can read ntfy can act on the alert.
+link. Anything that can read ntfy can act on the alert. Pushover's iPhone app has Apple's
+Critical Alerts permission and can ring in silent mode; Canarito does not send to it yet, a
+pull request is welcome.
 
 `setup` also prints an admin link, for whoever runs the computer. Canarito uses it on its own:
 when the emulator stops answering, when Google's earthquake service does not start, when the
@@ -166,6 +168,28 @@ one fixed receptor for home, and one following receptor for each person who trav
 following receptor sleeps while its person is home, so its memory is used only while they are
 away. A 16 GB computer fits home plus two people away at the same time; an 8 GB one fits
 home only. `setup` warns when the receptors would need more than 75% of the RAM.
+
+### On a cloud server
+
+A computer at home sleeps, loses power and reboots for updates. A small cloud server does not,
+and it keeps your positions off your own network. We run one on AWS for two people (home plus
+two following receptors):
+
+- **Instance**: `r8i.large` (2 vCPU, 16 GB) as spot, persistent, stopped (not terminated) on
+  interruption so the emulators keep their Google registration. It must be launched with
+  `--cpu-options NestedVirtualization=enabled`, or there is no `/dev/kvm` and the emulator
+  never boots. About US$1 a day in sa-east-1 in October 2026, disk and public IP included.
+- **No open ports**: a security group with no inbound rules, managed through AWS Systems
+  Manager (`aws ssm send-command`) instead of SSH.
+- **Setup**: [`cloud/aws-user-data.sh`](cloud/aws-user-data.sh) as user data on Ubuntu 24.04.
+  It installs the SDK and a JRE (sdkmanager needs Java), clones this repo and adds a systemd
+  unit. Then, as the `canarito` user, run `setup` for each receptor and
+  `systemctl enable --now canarito@<name>`.
+- Three emulators booting at once took 2 vCPU to a load of 11 for about ten minutes. They
+  were all registered with Google within 20 minutes.
+
+If the whole server dies, Canarito dies with it and cannot tell you. Use `--heartbeat-url`
+with an outside check such as healthchecks.io.
 
 ## How much warning you get
 
