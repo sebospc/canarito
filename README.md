@@ -1,258 +1,225 @@
-# Canarito
+<p align="center">
+  <img src="docs/banner.svg" alt="canarito: earthquake early warnings, on any phone" width="720">
+</p>
 
-Canarito runs an Android emulator on your own computer, tells it that it is at a place you
-choose (your home, your parents' town), and forwards Google's earthquake early warnings
-from that emulator to your phone. It works on iPhone too, through the free
-[ntfy](https://ntfy.sh) app.
+<p align="center">
+  <img alt="license MIT" src="https://img.shields.io/badge/license-MIT-F5B700">
+  <img alt="python 3.9+" src="https://img.shields.io/badge/python-3.9%2B-3776AB">
+  <img alt="android 15 emulator" src="https://img.shields.io/badge/emulator-Android%2015-3DDC84">
+  <img alt="iPhone and Android via ntfy" src="https://img.shields.io/badge/phone-iPhone%20%7C%20Android-E8590C">
+  <img alt="status experimental" src="https://img.shields.io/badge/status-experimental-red">
+</p>
 
-It is a hack around a system we do not own. Read [What can go wrong](#what-can-go-wrong)
-before you trust it with anything.
+Android phones get earthquake early warnings from Google. **iPhones don't.** Canarito runs an
+Android emulator on your computer, places it where you live, and sends its warnings to your
+phone and your family's, iPhone or Android.
 
-## Why it exists
+> [!WARNING]
+> This is a hack around a system we don't own. It is not official, it breaks Google's terms,
+> and it can miss an alert without telling you. Read [What can go wrong](#-what-can-go-wrong).
 
-Android phones get earthquake early warnings from Google (Android Earthquake Alerts, AEA).
-iPhones do not. In Colombia, where this started, most people do not get any early warning
-on an iPhone.
+## 🐤 How it works
 
-AEA decides who gets an alert by the location the phone reports. An Android emulator with a
-fake location is enough. On 23 and 24 September 2026 real quakes near Chaparral, Colombia,
-reached our emulators, and only the ones placed inside the alert radius got them. The
-others, 478 km away or more, got nothing.
+```mermaid
+flowchart LR
+    Q(["🌋 Quake"]) --> G["Google detects it<br/>with real Android phones"]
+    G -->|alert to everyone<br/>inside the radius| E["📱 Emulator on your computer<br/>location = your home"]
+    E -->|Canarito app catches it| N["ntfy.sh<br/>free push service"]
+    N --> P1["📲 Your iPhone"]
+    N --> P2["📲 Your mom's Android"]
+    N --> P3["📲 Anyone you share it with"]
 
-So the idea: one emulator per place you care about, an app inside it that catches the
-alert, and a push to your phone.
-
-## How it works
-
+    classDef quake fill:#E8590C,stroke:#E8590C,color:#fff
+    classDef google fill:#4285F4,stroke:#4285F4,color:#fff
+    classDef mine fill:#F5B700,stroke:#E0A500,color:#1F1F1F
+    classDef phone fill:#2F9E44,stroke:#2F9E44,color:#fff
+    class Q quake
+    class G google
+    class E,N mine
+    class P1,P2,P3 phone
 ```
-quake
-  │  Google detects it with Android phones near the epicenter (we do not take part)
-  ▼
-Google Play Services inside the emulator, location = your place
-  │  posts a notification on channel eew_alert*
-  ▼
-Canarito app in the emulator (a notification listener)
-  │  checks the sender is really Play Services (signing certificate), then
-  │  HTTP POST to your ntfy topic, own words, no Google text
-  ▼
-ntfy (ntfy.sh or your own server)
-  ▼
-ntfy app on every phone subscribed to that topic
+
+Google picks who gets the alert by the **location the device reports**. An emulator with a
+fake location is enough. Proven with real quakes in Colombia, September 2026: emulators
+inside the alert radius got it, the ones 478 km away did not.
+
+What arrives on the phone:
+
+<table><tr><td>
+
+🚨 **Alerta de sismo**<br/>
+Sismo M4.5 cerca de su zona. Protéjase ahora.
+
+</td><td>
+
+🚨 **Earthquake alert**<br/>
+Earthquake M4.5 near you. Take cover now.
+
+</td></tr></table>
+
+## 🧰 Do I need a server?
+
+**No.** Everything runs on your own computer, and Canarito sets it up.
+
+| piece | who runs it | cost |
+|---|---|---|
+| 📱 Android emulator | `canarito.py`, on your computer | free, ~4 GB RAM |
+| 🐤 Canarito app inside it | installed by `canarito.py` | free |
+| 📡 Push to phones | [ntfy.sh](https://ntfy.sh) public server | free |
+| 📲 Phone app | [ntfy](https://ntfy.sh) for iOS and Android | free |
+
+The only thing you keep is a computer turned on. Want full control? Run your own
+[ntfy server](https://docs.ntfy.sh/install/) and pass `--notify-url`.
+
+## 🚀 Quick start
+
+**You need:** macOS or Linux, Python 3.9+, the
+[Android SDK command line tools](https://developer.android.com/studio#command-line-tools-only)
+(`brew install --cask android-commandlinetools` on a Mac), and JDK 17 to build the app.
+
+```bash
+export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools   # where yours is
+
+# 1. Build the app that goes inside the emulator
+echo "sdk.dir=$ANDROID_HOME" > local.properties
+./gradlew :android:assembleDebug
+
+# 2. Create a receptor at your place (lat, lon from any map)
+python3 canarito.py setup --name home --lat 4.711 --lon -74.072
+
+# 3. Start it and leave it running
+python3 canarito.py run --name home
 ```
 
-On the computer, `canarito.py run` keeps the emulator alive: it starts it, feeds it the GPS
-position while it boots, installs and configures the app after every boot, and reboots it
-every 18 hours so its location never gets old.
+`setup` prints a private ntfy link like `https://ntfy.sh/canarito-3f9a…`. On each phone,
+install ntfy and subscribe to it. That's it.
 
-What you get on the phone, in Spanish by default:
+```mermaid
+flowchart LR
+    A["⚙️ setup<br/><i>first time downloads Android, a few GB</i>"] --> B["▶️ run<br/><i>boots in ~2 min</i>"]
+    B --> C["⏳ wait for<br/><b>AEA registered</b><br/><i>15–60 min, first time only</i>"]
+    C --> D["✅ protected"]
+    classDef step fill:#FFF4CC,stroke:#F5B700,color:#1F1F1F
+    classDef done fill:#2F9E44,stroke:#2F9E44,color:#fff
+    class A,B,C step
+    class D done
+```
 
-> **Alerta de sismo**
-> Sismo M4.5 cerca de su zona. Protéjase ahora.
+> [!IMPORTANT]
+> Wait for the line `AEA registered` in the log. Until then, Google's earthquake code inside
+> the emulator is not running and the receptor cannot get anything.
 
-`--language en` gives "Earthquake M4.5 near you. Take cover now."
+<details>
+<summary><b>More commands and options</b></summary>
 
-The text has no distance on purpose. The distance Google gives is from the emulator to the
-quake, not from you, and a phone showing "16 km" makes people believe it is theirs.
-
-## What you need
-
-- A computer that stays on: macOS (Apple Silicon or Intel) or Linux with KVM. Windows was
-  never tried.
-- About 4 GB of free RAM per emulator, and 10 GB of disk for the first one. Each emulator
-  grows to about 3.5 GB of RAM after some hours.
-- Python 3.9 or newer.
-- The Android SDK command line tools. JDK 17 if you build the app yourself.
-- A phone with the ntfy app: [iOS](https://apps.apple.com/app/ntfy/id1625396347),
-  [Android](https://play.google.com/store/apps/details?id=io.heckel.ntfy).
-
-No Google account is needed in the emulator. That was measured: an emulator with no account,
-on an x86_64 server with a Brazilian IP, got the alert for a quake in Colombia.
-
-## Install
-
-1. Android SDK. On macOS: `brew install --cask android-commandlinetools`. On Linux, the
-   "Command line tools only" zip from https://developer.android.com/studio. Then:
-
-   ```bash
-   export ANDROID_HOME=/opt/homebrew/share/android-commandlinetools   # where yours is
-   ```
-
-2. Build the app (or download `android-debug.apk` from the releases page and pass it with
-   `--apk`). It must be the debug build: the CLI writes its config with `run-as`, which only
-   works on debuggable apps.
-
-   ```bash
-   echo "sdk.dir=$ANDROID_HOME" > local.properties
-   ./gradlew :android:assembleDebug
-   ```
-
-3. Create a receptor at your place. Latitude and longitude in decimal degrees, from any map.
-
-   ```bash
-   python3 canarito.py setup --name home --lat 4.711 --lon -74.072
-   ```
-
-   The first time it downloads the emulator and an Android 15 image, a few GB. It prints the
-   ntfy topic it made for you, something like `https://ntfy.sh/canarito-3f9a...`.
-
-4. On each phone: install ntfy, add a subscription with that topic URL. On Android, set the
-   subscription to "urgent" so it can ring. On iPhone, allow notifications.
-
-5. Start it and leave it running:
-
-   ```bash
-   python3 canarito.py run --name home
-   ```
-
-   The first boot takes a few minutes, and the log says `receptor provisioned`. That is not
-   enough. Google's earthquake code inside the emulator has to start too, and on a new
-   emulator that took 13 to 60 minutes in our runs. Wait for `AEA registered`. Until that
-   line, this receptor cannot get an alert.
-
-6. Check the phone side and the receptor:
-
-   ```bash
-   python3 canarito.py test --name home
-   ```
-
-More places: run `setup` and `run` again with another `--name`. Each one is a full emulator,
-so the RAM adds up.
-
-To keep it running after a reboot of the computer, start `canarito.py run` from a systemd
-unit (Linux) or a launchd agent (macOS), with the same `ANDROID_HOME`. It runs in the
-foreground and keeps the emulator alive on its own.
-
-### Options
+| command | what it does |
+|---|---|
+| `canarito.py test --name home` | sends a test message to your phones and checks the emulator |
+| `canarito.py evidence --name home` | prints everything the app saw, as JSON lines |
+| `setup --name parents --lat … --lon …` | a second place; each one is a full emulator |
 
 | option | what it does |
 |---|---|
-| `--notify-url` | your own ntfy topic URL, for example on your own ntfy server |
-| `--notify-token` | ntfy access token, for a topic with access control |
-| `--heartbeat-url` | pinged every 5 minutes by the app, for example a [healthchecks.io](https://healthchecks.io) check. If the pings stop, that service tells you. Without it, nobody notices a dead receptor. |
+| `--notify-url` | your own ntfy topic or server |
+| `--notify-token` | ntfy access token, for a protected topic |
+| `--heartbeat-url` | pinged every 5 min, e.g. [healthchecks.io](https://healthchecks.io). It tells you when the receptor dies. |
 | `--language` | `es` (default) or `en` |
+| `--apk` | use a prebuilt APK (must be the debug build) |
 
-`canarito.py evidence --name home` prints everything the app saw from Play Services and each
-send attempt, as JSON lines.
+To survive a reboot of the computer, start `canarito.py run` from systemd (Linux) or launchd
+(macOS). Self-hosted ntfy and iPhone: set `upstream-base-url: "https://ntfy.sh"` on the
+server, or iPhones get the message late.
 
-On a self-hosted ntfy server, iPhones only get instant notifications if the server has
-`upstream-base-url: "https://ntfy.sh"` set. That is how ntfy delivers to iOS without an Apple
-developer account of your own.
+</details>
 
-## What can go wrong
+## ⏱️ How much warning do you get?
 
-This is the part to read.
+Google's alert reached our emulator **18.1 s** after the quake began. Canarito added **0.8 s**.
+Shaking travels about 3.5 km/s, so it depends on how far you are:
 
-**It is not an official alert system.** If it fails, nobody is accountable, and it can fail
-silently. Do not make it your only source of warning, and do not build something for other
-people on top of it without understanding everything below.
+| distance to the epicenter | warning |
+|---|---|
+| 🔴 20 km | none, shaking came 12 s before |
+| 🔴 50 km | none, 3 s late |
+| 🟡 100 km | ~11 s |
+| 🟢 200 km | ~40 s |
+| 🟢 300 km | ~68 s |
 
-**It breaks Google's terms.** The Android SDK license allows the emulator "solely to develop
-applications" (sections 3.1 and 3.4), and forbids distributing data obtained from Google
-APIs without permission (8.1). Google's Terms of Service forbid using its content without
-permission. Running this is your decision. We think personal, non-commercial use is low
-risk, but it is still against the terms. This project uses no Google text or brand in the
-alert it sends.
+Useful from about **80 km**. For the quake right under you, no system can help. Google says
+only 36% of its own users get the alert before the shaking.
 
-**Google can stop it any day.** Google's anti-abuse system (DroidGuard) reads the motion
-sensors to tell real devices from fake ones. Today that does not stop alert delivery to
-emulators. Nothing says it will stay that way, and you will not get a warning when it
-changes.
+## ⚠️ What can go wrong
 
-**The warning is often too late close to the epicenter.** Google's alert reached our
-emulator 18.1 s after the quake started (24-sep-2026, M4.5), and Canarito added about 0.8 s.
-The shaking (S wave) travels about 3.5 km/s:
-
-| your distance to the epicenter | shaking arrives | time left with the warning |
+| | risk | in short |
 |---|---|---|
-| 20 km | 6 s | none, 12 s late |
-| 50 km | 14 s | none, 3 s late |
-| 100 km | 29 s | about 11 s |
-| 200 km | 57 s | about 40 s |
-| 300 km | 86 s | about 68 s |
+| ⚖️ | **Google's terms** | The emulator license is for app development only, and Google's data can't be redistributed without permission. Your call. |
+| 🚫 | **Google can stop it** | Its anti-abuse system can tell emulators apart. Today it doesn't block alerts. Tomorrow, who knows. No warning when it changes. |
+| 🧭 | **Old location, lost alert** | Happened on 24-Sep-2026 with a ~25 h old location. Canarito reboots the emulator every 18 h to avoid it: ~10 min without coverage each time. |
+| 🐣 | **AEA never starts** | 1 in 8 of our new emulators never registered. `run` warns after 90 min: delete it and set it up again. |
+| ❓ | **One unexplained miss** | An emulator with a personal Google account didn't get the early alert. One without an account, on a server, did. Never found why. |
+| ✈️ | **It's the emulator's place, not yours** | Traveling? You still get alerts for home only. |
+| 🔁 | **Duplicates** | A retry can deliver twice. Twice was chosen over never. |
+| 🔓 | **ntfy.sh topics are public** | Anyone with the name can read and post. `setup` makes a random one: keep it private. |
+| 😴 | **Sleeping computer = sleeping receptor** | Turn off sleep on that machine. |
 
-It is useful from about 80 km. For the quake right under you, no system can help. Google
-says itself that only 36% of its users get the alert before the shaking.
+<details>
+<summary><b>The long version, with the details</b></summary>
 
-**The alert is for the emulator's place, not for you.** If you travel, you still get alerts
-for home. Google alerts within a radius that depends on its magnitude estimate (about 31 km
-for M4.5, 78 km for M5, 346 km for M6), so an emulator far from where you live may stay
-silent for a quake you feel.
+- **License and terms.** Android SDK License 3.1 and 3.4 allow the emulator "solely to
+  develop applications"; 8.1 forbids distributing data from Google APIs without permission.
+  Google's Terms of Service forbid using its content without permission. Canarito sends its
+  own words, never Google's text or brand.
+- **Anti-abuse.** Google's DroidGuard reads the motion sensors to tell real devices from fake
+  ones. We saw it sampling the emulator's accelerometer. It did not stop delivery.
+- **Location.** Play Services takes a GPS fix some minutes into each boot and keeps it, and
+  only updates it after a move of more than 1 km, at most every 5 min. The app holds GPS open
+  and `run` feeds the position during every boot.
+- **Only the early warning is sent.** The later "you may have felt shaking" notice
+  (`eew_update`, 5 min 21 s after the quake on 24-Sep) is skipped: "take cover" would be
+  wrong advice by then. If Google renames its alert channel, Canarito stops sending, on
+  purpose. Guessing risks a false alarm.
+- **No distance in the text.** Google's distance is from the emulator, not from you.
+- **Google's magnitude is its own.** A quake the Colombian Geological Service measured M3.6
+  came from Google as M4.46.
+- **Alert radius.** About 31 km for M4.5, 78 km for M5, 346 km for M6. An emulator far from
+  you may stay silent for a quake you feel.
 
-**Old location, lost alert.** On 24-sep-2026 an emulator with a location about 25 hours old
-did not get an alert it should have got. Play Services takes a GPS fix only some minutes into
-each boot and then keeps it, so the app holds GPS open and the CLI reboots the emulator
-every 18 hours. Each reboot is about 10 minutes without coverage.
+</details>
 
-**Some emulators never start AEA.** One in eight of our new emulators never registered,
-for reasons we did not find. `run` says so after 90 minutes: delete that AVD and run
-`setup` again.
+## 🔬 What was measured
 
-**One alert we never explained.** In the same quake, an emulator on a Mac with a personal
-Google account did not get the early warning, only the "you may have felt shaking" notice
-40 s later. An identical setup without an account on a server did. We never found out why.
+<details>
+<summary><b>Lab results, 22-Sep to 7-Oct-2026</b></summary>
 
-**Only the early warning is sent.** The later notice (`eew_update`, which came 5 min 21 s
-after the quake on 24-sep) is not forwarded, because "take cover" would be wrong advice by
-then. If Google renames its alert channel, Canarito stops forwarding, on purpose: guessing
-risks a false alarm. The evidence file still records what arrived.
+- **23-Sep, M4.5 near Chaparral, Colombia.** The emulator 19.5 km away got the alert; three
+  others 478 km or more away did not.
+- **24-Sep, M4.48 near Chaparral.** An emulator on a server in Brazil, with **no Google
+  account**, got the early alert at +18.1 s. Origin to phone: ~18.8 s.
+- **The emulator does not take part in detection.** In 18 hours of sensor logs, Google's
+  earthquake code never read the accelerometer.
+- **Google's alert radius is a lookup table by magnitude**, not a model: median error
+  0.4 km over 69 Colombian alerts from Allen et al. 2025
+  ([Zenodo 15498729](https://doi.org/10.5281/zenodo.15498729)). It barely accounts for depth,
+  so Bucaramanga, on top of a deep nest of quakes, gets the most alerts in Colombia.
+- **No full-screen alerts in Colombia.** 0 of 65 in three years, only normal notifications.
 
-**Google's magnitude is its own.** A quake the Colombian Geological Service measured as M3.6
-came from Google as M4.46. Compare by time and place, never by magnitude.
+</details>
 
-**ntfy.sh topics are public.** Anyone who knows the topic name can read it and post to it.
-`setup` makes a random name; keep it private, or use a protected topic or your own server.
+## 📜 History
 
-**Duplicates are possible.** A retry after a lost answer, or a restart of the app while an
-alert is on screen, can send the same alert twice. Twice was chosen over never. Two
-emulators near the same place also send one alert each.
+Canarito started in September 2026 as a paid iPhone app for Colombia and Chile: a fleet of
+emulators on AWS, a gateway pushing through Apple's servers, a native iOS app with a
+subscription, built by one person with a team of AI coding agents.
 
-**A computer that sleeps is a receptor that sleeps.** Turn off sleep on the machine that runs
-it. We once missed hours of outage because the Mac that watched the fleet was asleep.
+It was dropped on **7-Oct-2026**, before launch. The terms problem had no good answer for a
+paid product, the servers cost money every month, and the author needed to focus on another
+project. What's left is the part that works for one family on their own computer, with no
+server of ours in the middle.
 
-## What was measured
+**Ideas not done:** read the emulator's real location age instead of rebooting every 18 h; a
+shared receptor for a whole neighborhood. And the real fix: official access to the alert
+feed, from Google or a national seismological service.
 
-All numbers in this README come from a lab run between 22-Sep and 7-Oct-2026:
+---
 
-- 23-sep, M4.5 near Chaparral: the emulator 19.5 km away got the alert, three others
-  478 km or more away did not. Google's radius for M4.5 is 31 km.
-- 24-sep, M4.48 near Chaparral: an emulator on AWS (no Google account, x86_64, Brazilian
-  IP) got the early warning at +18.1 s. Origin to push on a test phone: about 18.8 s.
-- The emulator does not take part in detection. In 18 hours of sensor logs, nothing in
-  Play Services' earthquake code read the accelerometer. Injecting accelerometer data is
-  possible but goes nowhere, and could harm a system that warns millions if it did.
-- Play Services updates the location for AEA at most every 5 minutes and only after a move
-  of more than 1 km.
-- Google's alert radius follows a table by magnitude, not a model. Interpolating it matched
-  the real radius with a median error of 0.4 km on 69 Colombian alerts from Allen et al.
-  2025 ([Zenodo 15498729](https://doi.org/10.5281/zenodo.15498729)). It barely accounts for
-  depth: Bucaramanga, with its deep nest of quakes, gets the most alerts in Colombia.
-- In Colombia, none of 65 alerts in three years was the full-screen "TakeAction" type, only
-  normal notifications.
-
-## History
-
-This started in September 2026 as a plan for a paid iPhone app in Colombia and Chile. The
-system then had more parts: a fleet of emulators on AWS spot servers, a gateway that pushed
-through Apple's push service (APNs) and Web Push, a native iOS app with a subscription, and
-a team of AI coding agents doing most of the work under one person.
-
-That plan was dropped on 7-Oct-2026, before launch. The terms problem above had no good
-answer for a paid product. The servers cost money every month whether anyone used them or
-not. The author also could not keep working on it next to another project.
-
-What is left is the part that works for one person or one family on their own computer,
-with no server and no account of ours in the middle. The AWS fleet, the gateway and the iOS
-app are not in this repository.
-
-## Ideas not done
-
-- Read AEA's own location age from `dumpsys` and reboot only when needed, instead of every
-  18 hours.
-- A shared receptor for a neighborhood or a town, with one ntfy topic many people follow.
-- A proper permission from Google, or access to the official alert feed from a national
-  seismological service, would make all of this unnecessary. That is the real fix.
-
-## License
-
-MIT. See [LICENSE](LICENSE). Not affiliated with Google. Android Earthquake Alerts is a
-Google service.
+<p align="center"><sub>MIT license · Not affiliated with Google · Android Earthquake Alerts is a Google service</sub></p>

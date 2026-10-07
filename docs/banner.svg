@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 200" width="800" height="200" role="img" aria-label="Canarito: earthquake early warnings for any phone">
+  <defs>
+    <linearGradient id="wave" x1="0" x2="1" y1="0" y2="0">
+      <stop offset="0" stop-color="#F5B700" stop-opacity="0.15"/>
+      <stop offset="0.45" stop-color="#F5B700"/>
+      <stop offset="0.55" stop-color="#E8590C"/>
+      <stop offset="1" stop-color="#E8590C" stop-opacity="0.15"/>
+    </linearGradient>
+  </defs>
+  <!-- seismogram: quiet, the quake, quiet again -->
+  <polyline fill="none" stroke="url(#wave)" stroke-width="3" stroke-linejoin="round" stroke-linecap="round"
+    points="20,150 120,150 140,146 160,154 180,148 200,152 250,150 270,140 285,162 300,120 315,178 330,100 345,190 360,110 375,175 390,128 405,165 420,138 440,158 460,145 480,153 510,149 560,151 620,150 780,150"/>
+  <!-- canary -->
+  <g transform="translate(600 40)">
+    <ellipse cx="60" cy="62" rx="44" ry="34" fill="#F5B700"/>
+    <circle cx="96" cy="34" r="24" fill="#F5B700"/>
+    <path d="M118 30 L136 36 L118 42 Z" fill="#E8590C"/>
+    <circle cx="102" cy="29" r="4" fill="#1F1F1F"/>
+    <path d="M20 58 Q-6 50 2 82 Q14 72 28 74 Z" fill="#E0A500"/>
+    <path d="M40 60 Q62 46 82 64 Q62 74 40 60 Z" fill="#E0A500"/>
+    <path d="M52 94 L48 108 M70 94 L74 108" stroke="#E8590C" stroke-width="4" stroke-linecap="round"/>
+  </g>
+  <text x="20" y="70" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="54" font-weight="700" fill="#F5B700">canarito</text>
+  <text x="22" y="102" font-family="-apple-system, Segoe UI, Helvetica, Arial, sans-serif" font-size="20" fill="#8B8B8B">earthquake early warnings, on any phone</text>
+</svg>
