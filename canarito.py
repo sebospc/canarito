@@ -8,8 +8,8 @@ place you choose, and forward them through ntfy to any device you subscribe.
     canarito.py evidence --name home
 
 Needs Python 3.9+ and the Android SDK command line tools (sdkmanager, avdmanager) with
-ANDROID_HOME set; a JDK only if you build the APK yourself, otherwise run downloads it. Read README.md first: this is not an
-official alert system and it can miss alerts.
+ANDROID_HOME set; a JDK only if you build the APK yourself, otherwise run downloads it.
+Read README.md first: this is not an official alert system and it can miss alerts.
 """
 import argparse
 import base64
