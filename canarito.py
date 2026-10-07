@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """Canarito: run an Android emulator that receives Google's earthquake early warnings at a
-place you choose, and forward them to your phone through ntfy.
+place you choose, and forward them through ntfy to any device you subscribe.
 
     canarito.py setup --name home --lat 4.711 --lon -74.072
     canarito.py run --name home
