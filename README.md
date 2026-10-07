@@ -61,7 +61,10 @@ link. Anything that can read ntfy can act on the alert.
 `setup` also prints an admin link, for whoever runs the computer. Canarito uses it on its own:
 when the emulator stops answering, when Google's earthquake service does not start, when the
 app could not be set up, and after the computer slept. It says so again when the problem
-ends. If coverage stays gone for an hour, the alert link gets one message too, so the family
+ends. Every 10 minutes it also checks the public quake catalogs (USGS and EMSC worldwide, plus
+national ones such as Colombia's SGC where they exist) and reports any quake inside Google's
+alert radius that reached no alert. Google uses its own magnitude, so a quake near the edge
+is reported as "possibly missed". If coverage stays gone for an hour, the alert link gets one message too, so the family
 knows. Never sign in to a Google account in the emulator: the one alert we lost with no
 explanation was on an emulator signed in to a personal account.
 

@@ -23,6 +23,8 @@ import time
 import urllib.request
 from pathlib import Path
 
+import catalogs
+
 PACKAGE = "app.canarito.receptor"
 LISTENER = f"{PACKAGE}/.CaptureService"
 CONFIG_DIR = Path(os.environ.get("CANARITO_HOME", Path.home() / ".canarito"))
@@ -47,6 +49,7 @@ FAMILY_AFTER_S = 60 * 60
 SLEPT_AFTER_S = 60
 # An emulator that dies at once must not be relaunched in a tight loop.
 RESTART_EVERY_S = 60
+MISSED_CHECK_EVERY_S = 10 * 60
 
 NOTICES = {
     "es": {
@@ -59,6 +62,9 @@ NOTICES = {
         "slept": "El computador estuvo suspendido de {start} a {end}. “{name}” no tuvo cobertura en ese tiempo.",
         "family_down": "Canarito “{name}” no tiene cobertura desde las {since}. Te avisamos cuando vuelva.",
         "family_ok": "Canarito “{name}” volvió a tener cobertura.",
+        "missed": "Sismo M{mag} a {km} km de “{name}” a las {when} ({sources}). Este receptor no recibió aviso.",
+        "possibly": "Posible aviso perdido: sismo M{mag} a {km} km de “{name}” a las {when} ({sources}). Google usa su propia magnitud, así que puede que no haya avisado.",
+        "late": "Sismo M{mag} a {km} km de “{name}” a las {when} ({sources}). Solo llegó el aviso tardío de Google, no la alerta temprana.",
     },
     "en": {
         "emulator_down": "Receptor “{name}” has not answered since {since}.",
@@ -70,6 +76,9 @@ NOTICES = {
         "slept": "The computer was asleep from {start} to {end}. “{name}” had no coverage then.",
         "family_down": "Canarito “{name}” has no coverage since {since}. We will tell you when it is back.",
         "family_ok": "Canarito “{name}” has coverage again.",
+        "missed": "Quake M{mag} {km} km from “{name}” at {when} ({sources}). This receptor got no alert.",
+        "possibly": "Possibly missed: quake M{mag} {km} km from “{name}” at {when} ({sources}). Google uses its own magnitude, so it may not have alerted.",
+        "late": "Quake M{mag} {km} km from “{name}” at {when} ({sources}). Only Google's later notice arrived, not the early alert.",
     },
 }
 
@@ -200,6 +209,49 @@ class Health:
             if self.clock() - since > FAMILY_AFTER_S:
                 self.family_told = True
                 self.send("family", self._text("family_down", since=clock_time(since)), "high")
+
+
+def alert_times(evidence_jsonl):
+    """(early alerts, later notices): capture times in epoch seconds of Google's notifications."""
+    early, late = [], []
+    for line in evidence_jsonl.splitlines():
+        try:
+            event = json.loads(line)
+        except ValueError:
+            continue
+        channel = event.get("channel_id") or ""
+        if event.get("event_type") != "NOTIFICATION_POSTED" or not channel.startswith("eew"):
+            continue
+        (early if channel.startswith("eew_alert") else late).append(event["captured_at_ms"] / 1000)
+    return early, late
+
+
+def reported_path(name):
+    return CONFIG_DIR / f"{name}.reported.json"
+
+
+def check_missed(config, emulator, health, reported):
+    """Tells the admin about quakes this receptor should have caught. Skips the round when the
+    evidence cannot be read: no evidence must never read as "no alert"."""
+    evidence = emulator.adb("exec-out", "run-as", PACKAGE, "cat", "files/notification-evidence.jsonl", timeout=60)
+    if evidence is None:
+        return
+    names = config.get("catalogs") or catalogs.catalogs_for(config["lat"], config["lon"])
+    events, failed = catalogs.fetch_events(config["lat"], config["lon"], names, time.time())
+    for failure in failed:
+        log(f"catalog not read: {failure}")
+    if len(failed) == len(names):
+        return
+    early, late = alert_times(evidence)
+    for event, km, verdict in catalogs.missed(events, config["lat"], config["lon"], early, late,
+                                              time.time(), reported):
+        health.note(verdict, mag=f"{event['mag']:.1f}", km=f"{km:.0f}", when=clock_time(event["time"]),
+                    sources=", ".join(event["sources"]))
+    # Only quakes still inside the look-back window can come up again; older keys are dropped.
+    recent = {key: when for key, when in reported.items() if when > time.time() - 2 * catalogs.LOOK_BACK_S}
+    reported.clear()
+    reported.update(recent)
+    reported_path(config["name"]).write_text(json.dumps(recent))
 
 
 class Emulator:
@@ -345,6 +397,11 @@ def run(args):
     aea_seen = False
     aea_checked_at = 0
     down_since = None
+    missed_checked_at = -MISSED_CHECK_EVERY_S
+    try:
+        reported = dict(json.loads(reported_path(config["name"]).read_text()))
+    except (OSError, ValueError, TypeError):
+        reported = {}
     started_at = -RESTART_EVERY_S
     last_wall, last_mono = time.time(), time.monotonic()
     while True:
@@ -394,6 +451,9 @@ def run(args):
                 emulator.adb("reboot")
                 # Long enough for the guest to drop off adb, so this does not fire twice.
                 time.sleep(IDLE_EVERY_S)
+            if mono - missed_checked_at > MISSED_CHECK_EVERY_S:
+                missed_checked_at = mono
+                check_missed(config, emulator, health, reported)
         health.tick()
         time.sleep(FIX_EVERY_S if booting else IDLE_EVERY_S)
 

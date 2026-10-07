@@ -8,6 +8,7 @@ from pathlib import Path
 from unittest import mock
 
 import canarito
+import catalogs
 
 CONFIG = {"name": "home", "notify_url": "https://ntfy.sh/canarito-x", "language": "es",
           "notify_token": "", "heartbeat_url": "", "lat": 4.7, "lon": -74.1, "port": 5554}
@@ -110,6 +111,70 @@ class HealthTest(unittest.TestCase):
 
     def test_a_notice_that_cannot_go_out_does_not_stop_the_receptor(self):
         self.assertFalse(canarito.post_notice("http://127.0.0.1:1/x", "", "hola"))
+
+
+# Chaparral, Colombia: the 23-Sep-2026 M4.5 reached an emulator 19.5 km away.
+CHAPARRAL = (3.72, -75.48)
+QUAKE_T = 1_790_190_000.0
+
+
+def quake(source="USGS", mag=4.5, km_north=19.5, dt=0.0, ident="a"):
+    return {"id": ident, "source": source, "time": QUAKE_T + dt, "mag": mag,
+            "lat": CHAPARRAL[0] + km_north / 111.2, "lon": CHAPARRAL[1]}
+
+
+class MissedQuakeTest(unittest.TestCase):
+    def judge(self, events, early=(), late=(), now=QUAKE_T + 3600, reported=None):
+        return catalogs.missed(events, *CHAPARRAL, list(early), list(late), now,
+                               {} if reported is None else reported)
+
+    def test_radius_follows_googles_table(self):
+        self.assertEqual(catalogs.radius_km(4.4), 0)
+        self.assertEqual(catalogs.radius_km(4.5), 31)
+        self.assertAlmostEqual(catalogs.radius_km(5.05), 86, delta=0.5)
+        self.assertEqual(catalogs.radius_km(9.0), 669)
+
+    def test_a_quake_inside_the_radius_with_no_alert_is_missed(self):
+        [(event, km, verdict)] = self.judge([quake()])
+        self.assertEqual(verdict, "missed")
+        self.assertAlmostEqual(km, 19.5, delta=0.5)
+
+    def test_an_alert_soon_after_the_quake_means_nothing_to_report(self):
+        self.assertEqual(self.judge([quake()], early=[QUAKE_T + 18]), [])
+
+    def test_only_the_late_notice_is_reported_as_late(self):
+        [(_, _, verdict)] = self.judge([quake()], late=[QUAKE_T + 321])
+        self.assertEqual(verdict, "late")
+
+    def test_inside_only_with_more_magnitude_is_possibly_missed(self):
+        # M4.2 has no radius; M4.7 (4.2 + 0.5) reaches 45 km.
+        [(_, _, verdict)] = self.judge([quake(mag=4.2, km_north=40)])
+        self.assertEqual(verdict, "possibly")
+        self.assertEqual(self.judge([quake(mag=4.2, km_north=60)]), [])
+
+    def test_two_catalogs_are_one_quake_and_the_larger_magnitude_counts(self):
+        [(event, _, verdict)] = self.judge([quake("USGS", mag=4.3, ident="u"), quake("EMSC", mag=4.6, dt=20, ident="e")])
+        self.assertEqual(event["sources"], ["USGS", "EMSC"])
+        self.assertEqual(verdict, "missed")
+
+    def test_each_quake_is_judged_once_and_only_after_it_settles(self):
+        reported = {}
+        self.assertEqual(self.judge([quake()], now=QUAKE_T + 60, reported=reported), [])
+        self.assertEqual(len(self.judge([quake()], reported=reported)), 1)
+        self.assertEqual(self.judge([quake()], reported=reported), [])
+
+    def test_national_catalogs_apply_only_inside_their_area(self):
+        self.assertIn("sgc", catalogs.catalogs_for(4.711, -74.072))
+        self.assertNotIn("sgc", catalogs.catalogs_for(-33.45, -70.66))
+        self.assertEqual(catalogs.catalogs_for(35.68, 139.69), ["usgs", "emsc"])
+
+    def test_reads_early_alerts_and_late_notices_from_the_evidence(self):
+        evidence = "\n".join(json.dumps(e) for e in (
+            {"event_type": "NOTIFICATION_POSTED", "channel_id": "eew_alert_v2", "captured_at_ms": 1000},
+            {"event_type": "NOTIFICATION_POSTED", "channel_id": "eew_update", "captured_at_ms": 2000},
+            {"event_type": "NOTIFICATION_POSTED", "channel_id": "finder", "captured_at_ms": 3000},
+            {"event_type": "RELAY_ATTEMPT", "captured_at_ms": 4000})) + "\nnot json"
+        self.assertEqual(canarito.alert_times(evidence), ([1.0], [2.0]))
 
 
 if __name__ == "__main__":

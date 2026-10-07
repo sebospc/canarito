@@ -35,7 +35,7 @@ PAGES = {
         "warn_h": "Cuánto aviso tienes",
         "warn_p": "Depende de qué tan lejos estés del epicentro. Google dice que solo el 36% de sus propios usuarios recibe el aviso antes del temblor.",
         "risks_h": "Qué puede fallar",
-        "risks_p": "Léelo antes de confiar en Canarito para algo importante.",
+        "risks_p": "Léelo antes de confiar en Canarito para algo importante. Canarito te avisa por un enlace aparte cuando algo falla, y cuando hubo un sismo cerca que no le llegó.",
         "risks": (
             ("Los términos de Google", "La licencia del emulador es solo para desarrollar apps, y los datos de Google no se pueden redistribuir sin permiso. Usarlo es decisión tuya."),
             ("Google lo puede apagar", "Su sistema contra abusos lee los sensores del emulador. En nuestras pruebas no bloqueó los avisos, y si eso cambia nadie te va a avisar."),
@@ -81,7 +81,7 @@ PAGES = {
         "warn_h": "How much warning you get",
         "warn_p": "It depends on how far you are from the epicenter. Google says only 36% of its own users get the alert before the shaking.",
         "risks_h": "What can go wrong",
-        "risks_p": "Read this before you trust Canarito with anything important.",
+        "risks_p": "Read this before you trust Canarito with anything important. Canarito tells you on a separate link when something breaks, and when a nearby quake reached no alert.",
         "risks": (
             ("Google's terms", "The emulator license covers app development only, and Google's data may not be redistributed without permission. Running this is your decision."),
             ("Google can stop it", "Its anti-abuse system reads the emulator's sensors. It did not block alerts in our tests, and nobody will tell you if that changes."),
