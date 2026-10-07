@@ -125,8 +125,8 @@ Any app can feed the location link. The whole contract is one JSON message:
 <details>
 <summary>Recipes: OwnTracks, Home Assistant, iPhone Shortcuts</summary>
 
-- **OwnTracks**: `setup --follow` does it for you. On iPhone, first turn on remote
-  configuration in OwnTracks' Settings, or it refuses the setup link with "URI or file
+- **OwnTracks**: `setup --follow` does it for you. On iPhone, first turn on "Allow
+  external configuration" in OwnTracks' Settings, or it refuses the setup link with "URI or file
   configuration not allowed". Without the link: mode HTTP, URL = the location link. We tested the receptor side with messages in
   OwnTracks' format; a real phone has not been tested yet.
 - **Home Assistant** (not tested yet): post the phone's position whenever it changes.

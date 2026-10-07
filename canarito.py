@@ -581,7 +581,7 @@ Then start it, and leave it running:
         print(f"""This receptor follows {args.name}. On {args.name}'s phone:
   1. Add the alert topic above in ntfy.
   2. Install OwnTracks (App Store or Google Play). On iPhone, open its Settings and turn on
-     remote configuration first: OwnTracks blocks setup links until you do.
+     "Allow external configuration" first: OwnTracks blocks setup links until you do.
   3. Tap the Canarito message that just arrived{"" if sent else " (it could not be sent; open the link below instead)"}.
      It opens OwnTracks already set up. The same link: {link}
   If the link does not work, set OwnTracks by hand: mode HTTP, URL {location_url}
@@ -662,6 +662,7 @@ def run(args):
             follower.update(*saved)
             emulator.position = tuple(saved)
         last_position_at = time.time()
+        position_seen = False
         threading.Thread(target=follow_locations, daemon=True,
                          args=(config["location_url"], config.get("notify_token"), on_message)).start()
     last_wall, last_mono = time.time(), time.monotonic()
@@ -673,6 +674,9 @@ def run(args):
         last_wall, last_mono = wall, mono
 
         if follower:
+            if positions and not position_seen:
+                log("first position from the location link")
+                position_seen = True
             while positions:
                 follower.update(*positions.pop(0))
                 last_position_at = wall
