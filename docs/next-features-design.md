@@ -61,7 +61,7 @@ Rejected:
   - the emulator is not running or not answering for more than 5 minutes;
   - Google's earthquake service is not registered 90 minutes after a boot;
   - setup inside the emulator failed (app missing, config not written, listener not allowed);
-  - a following receptor got no position for more than 1 hour;
+  - a following receptor got no position for more than 1 hour. Built as 6 hours: OwnTracks stays quiet while a phone does not move, so 1 hour would fire every night. A stricter check needs a keep-alive from the phone;
   - after the computer wakes from sleep: "was asleep from 02:10 to 06:45, no coverage then".
   A dead internet connection cannot be reported this way; `--heartbeat-url` with an outside service such as healthchecks.io covers that, and the README says so.
 - Q2: a quake inside the radius computed from the catalog magnitude is reported as missed. One inside the radius only for magnitude + 0.5 is reported as possibly missed, marked as uncertain.

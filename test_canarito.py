@@ -177,5 +177,78 @@ class MissedQuakeTest(unittest.TestCase):
         self.assertEqual(canarito.alert_times(evidence), ([1.0], [2.0]))
 
 
+class FollowingReceptorTest(unittest.TestCase):
+    HOME = [("casa", 4.71, -74.07)]
+
+    def setUp(self):
+        self.now = 0.0
+        self.follower = canarito.Follower(self.HOME, clock=lambda: self.now)
+
+    def test_reads_owntracks_and_plain_positions_rounded_to_about_a_kilometer(self):
+        self.assertEqual(canarito.parse_position('{"_type":"location","lat":4.711234,"lon":-74.072987,"tst":1}'), (4.71, -74.07))
+        self.assertEqual(canarito.parse_position('{"lat":-33.4489,"lon":-70.6693}'), (-33.45, -70.67))
+        self.assertIsNone(canarito.parse_position('{"_type":"status","android":{}}'))
+        for bad in ('[1,2]', '{"lat":"4.7","lon":-74}', '{"lat":true,"lon":1}', '{"lat":95,"lon":0}', 'nope'):
+            with self.assertRaises(ValueError):
+                canarito.parse_position(bad)
+
+    def test_moves_only_after_a_kilometer_and_five_minutes(self):
+        self.follower.update(4.90, -74.07)  # about 21 km from home
+        self.assertEqual(self.follower.step(), "move")
+        self.follower.update(5.00, -74.07)  # 11 km more, but only a minute later
+        self.now += 60
+        self.assertIsNone(self.follower.step())
+        self.now += canarito.MOVE_EVERY_S
+        self.assertEqual(self.follower.step(), "move")
+        self.follower.update(5.005, -74.07)  # 0.6 km more, long after
+        self.now += canarito.MOVE_EVERY_S * 3
+        self.assertIsNone(self.follower.step())
+
+    def test_sleeps_after_half_an_hour_home_and_wakes_when_leaving(self):
+        self.follower.update(4.72, -74.07)  # 1 km from home
+        self.follower.step()
+        self.now += canarito.ASLEEP_AFTER_S - 1
+        self.assertNotEqual(self.follower.step(), "sleep")
+        self.now += 1
+        self.assertEqual(self.follower.step(), "sleep")
+        self.assertEqual(self.follower.near, "casa")
+        self.follower.update(4.73, -74.07)  # still home
+        self.assertIsNone(self.follower.step())
+        self.follower.update(4.80, -74.07)  # 10 km away
+        self.assertEqual(self.follower.step(), "wake")
+        self.assertEqual(self.follower.applied, (4.80, -74.07))
+
+    def test_a_short_stop_at_home_does_not_put_it_to_sleep(self):
+        self.follower.update(4.71, -74.07)
+        self.follower.step()
+        self.now += 600
+        self.follower.update(4.90, -74.07)
+        self.follower.step()
+        self.now += canarito.ASLEEP_AFTER_S
+        self.assertNotEqual(self.follower.step(), "sleep")
+
+    def test_home_receptor_also_sends_to_people_sleeping_near_it(self):
+        with tempfile.TemporaryDirectory() as home, mock.patch.object(canarito, "CONFIG_DIR", Path(home)):
+            Path(home, "ana.status.json").write_text(json.dumps({"asleep": True, "near": "casa", "notify_url": "https://ntfy.sh/ana"}))
+            Path(home, "luis.status.json").write_text(json.dumps({"asleep": False, "near": "casa", "notify_url": "https://ntfy.sh/luis"}))
+            Path(home, "eva.status.json").write_text(json.dumps({"asleep": True, "near": "finca", "notify_url": "https://ntfy.sh/eva"}))
+            self.assertEqual(canarito.sleeping_neighbours("casa"), ["https://ntfy.sh/ana"])
+            Path(home, "casa.json").write_text(json.dumps({"name": "casa", "avd": "a", "lat": 4.7, "lon": -74.1, "port": 5554}))
+            Path(home, "ana.json").write_text(json.dumps({"name": "ana", "avd": "b", "lat": 4.7, "lon": -74.1, "port": 5556, "follow": True}))
+            self.assertEqual(canarito.fixed_receptors(), [("casa", 4.7, -74.1)])
+            self.assertEqual(canarito.free_port(), 5558)
+        relay = json.loads(canarito.relay_config(CONFIG, ["https://ntfy.sh/b", "https://ntfy.sh/a"]))
+        self.assertEqual(relay["extra_urls"], ["https://ntfy.sh/a", "https://ntfy.sh/b"])
+        self.assertNotIn("extra_urls", json.loads(canarito.relay_config(CONFIG)))
+
+    def test_owntracks_link_carries_the_location_link(self):
+        import urllib.parse
+        link = canarito.owntracks_link("https://ntfy.sh/canarito-where-x?cache=no", "ana")
+        self.assertTrue(link.startswith("owntracks:///config?inline="))
+        settings = json.loads(base64.b64decode(urllib.parse.unquote(link.split("inline=", 1)[1])))
+        self.assertEqual(settings["url"], "https://ntfy.sh/canarito-where-x?cache=no")
+        self.assertEqual(settings["mode"], 3)
+
+
 if __name__ == "__main__":
     unittest.main()

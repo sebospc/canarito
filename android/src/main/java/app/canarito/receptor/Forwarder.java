@@ -27,8 +27,9 @@ import java.util.concurrent.TimeUnit;
  * that topic in the ntfy app gets it. No server of ours in between.
  *
  * Config lives in files/relay.json, written by canarito.py with adb:
- * {"notify_url": "https://ntfy.sh/<topic>", "name": "home",
+ * {"notify_url": "https://ntfy.sh/<topic>", "name": "home", "extra_urls": ["<optional>"],
  *  "notify_token": "<optional>", "heartbeat_url": "<optional>", "language": "es|en"}.
+ * extra_urls are the links of people whose own following receptor sleeps near this one.
  * No config means capture only: the evidence file fills, nothing is sent.
  */
 final class Forwarder {
@@ -69,31 +70,37 @@ final class Forwarder {
         Float finiteMagnitude = RelayPolicy.finiteOrNull(magnitude);
         byte[] body = RelayPolicy.bodyFor(finiteMagnitude, language).getBytes(StandardCharsets.UTF_8);
         String title = RelayPolicy.titleFor(language);
-        String url = config.optString("notify_url");
+        java.util.List<String> extraUrls = new java.util.ArrayList<>();
+        org.json.JSONArray extras = config.optJSONArray("extra_urls");
+        for (int i = 0; extras != null && i < extras.length(); i++) extraUrls.add(extras.optString(i));
         String token = config.optString("notify_token");
         long deadline = System.currentTimeMillis() + RelayPolicy.ALERT_TTL_MS;
 
-        SENDER.execute(() -> {
-            // A retry after a lost answer can deliver twice. Twice is fine, never is not.
-            for (long backoff : RETRY_BACKOFF_MS) {
-                if (System.currentTimeMillis() + backoff > deadline) break;
-                sleep(backoff);
-                PostResult result = post(url, token, title, body);
-                JSONObject attempt = CaptureService.baseEvent(context, "RELAY_ATTEMPT");
-                CaptureService.put(attempt, "event_id", eventId);
-                CaptureService.put(attempt, "magnitude", finiteMagnitude);
-                CaptureService.put(attempt, "distance_km", RelayPolicy.finiteOrNull(distanceKm));
-                CaptureService.put(attempt, "http_status", result.status());
-                CaptureService.put(attempt, "request_written_at_ms", result.writtenAtMs());
-                CaptureService.put(attempt, "error", result.error());
-                EvidenceStore.append(context, attempt);
-                if (result.isSuccess()) return;
-                // Wrong token or a topic that is not ours: retrying cannot fix it.
-                if (result.status() == 401 || result.status() == 403) return;
-            }
-            // Out of retries: let a reconnect replay try again while the warning is still on screen.
-            SENT.remove(eventId);
-        });
+        // One task per link, all on the same thread: the receptor's own link goes first.
+        for (String url : RelayPolicy.targets(config.optString("notify_url"), extraUrls)) {
+            SENDER.execute(() -> {
+                // A retry after a lost answer can deliver twice. Twice is fine, never is not.
+                for (long backoff : RETRY_BACKOFF_MS) {
+                    if (System.currentTimeMillis() + backoff > deadline) break;
+                    sleep(backoff);
+                    PostResult result = post(url, token, title, body);
+                    JSONObject attempt = CaptureService.baseEvent(context, "RELAY_ATTEMPT");
+                    CaptureService.put(attempt, "event_id", eventId);
+                    CaptureService.put(attempt, "target", url.equals(config.optString("notify_url")) ? "own" : "extra");
+                    CaptureService.put(attempt, "magnitude", finiteMagnitude);
+                    CaptureService.put(attempt, "distance_km", RelayPolicy.finiteOrNull(distanceKm));
+                    CaptureService.put(attempt, "http_status", result.status());
+                    CaptureService.put(attempt, "request_written_at_ms", result.writtenAtMs());
+                    CaptureService.put(attempt, "error", result.error());
+                    EvidenceStore.append(context, attempt);
+                    if (result.isSuccess()) return;
+                    // Wrong token or a topic that is not ours: retrying cannot fix it.
+                    if (result.status() == 401 || result.status() == 403) return;
+                }
+                // Out of retries: let a reconnect replay try again while the warning is still on screen.
+                SENT.remove(eventId);
+            });
+        }
     }
 
     static synchronized void startMonitoring(Context context) {

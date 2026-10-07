@@ -37,6 +37,15 @@ public class RelayPolicyTest {
     }
 
     @Test
+    public void sendsToItsOwnLinkFirstAndToEachSleepingNeighbourOnce() {
+        assertEquals(java.util.Arrays.asList("https://ntfy.sh/casa", "https://ntfy.sh/ana"),
+                RelayPolicy.targets("https://ntfy.sh/casa",
+                        java.util.Arrays.asList("https://ntfy.sh/ana", "", null, "https://ntfy.sh/casa", "https://ntfy.sh/ana")));
+        assertEquals(java.util.Collections.singletonList("https://ntfy.sh/casa"),
+                RelayPolicy.targets("https://ntfy.sh/casa", java.util.Collections.emptyList()));
+    }
+
+    @Test
     public void keysOnQuakeOriginNotOnNotificationTag() {
         // The two real Chaparral quakes, 5 h apart, shared one tag but not one origin.
         String first = RelayPolicy.eventId("chaparral", 1790194179L, 0);

@@ -91,6 +91,73 @@ iPhones get the message late.
 
 </details>
 
+## Follow a person
+
+A receptor can follow one person's phone instead of staying at a place:
+
+```bash
+python3 canarito.py setup --name ana --follow --lat 4.711 --lon -74.072   # where it starts
+python3 canarito.py run --name ana
+```
+
+Ana subscribes ntfy to her own alert link, installs OwnTracks
+([iPhone](https://apps.apple.com/app/owntracks/id692424691),
+[Android](https://play.google.com/store/apps/details?id=org.owntracks.android)) and taps the
+message Canarito sends her. OwnTracks then posts her position to a private location link, and
+Canarito moves her receptor there after each move of more than 1 km, at most every 5 minutes.
+Google itself takes a new location no more often than that.
+
+When she has been within 5 km of a fixed receptor for 30 minutes, her receptor sleeps to free
+its memory, and the fixed receptor also sends its alerts to her link. It wakes when she is
+more than 5 km away, at her new place. Positions are rounded to about 1 km. On ntfy.sh they
+pass through without being stored, but ntfy.sh sees them; `--location-url` points to your own
+ntfy server instead.
+
+Any app can feed the location link. The whole contract is one JSON message:
+
+```json
+{"lat": 4.711, "lon": -74.072}
+```
+
+<details>
+<summary>Recipes: OwnTracks, Home Assistant, iPhone Shortcuts</summary>
+
+- **OwnTracks**: `setup --follow` does it for you. We tested the receptor side with messages in
+  OwnTracks' format; a real phone has not been tested yet.
+- **Home Assistant** (not tested yet): post the phone's position whenever it changes.
+
+  ```yaml
+  rest_command:
+    canarito_ana:
+      url: "https://ntfy.sh/canarito-where-...?cache=no"   # Ana's location link
+      method: post
+      payload: '{"lat": {{ state_attr("device_tracker.ana_phone", "latitude") }}, "lon": {{ state_attr("device_tracker.ana_phone", "longitude") }}}'
+  automation:
+    - alias: Canarito follows Ana
+      trigger:
+        - platform: state
+          entity_id: device_tracker.ana_phone
+          attribute: latitude
+      action:
+        - service: rest_command.canarito_ana
+  ```
+- **iPhone Shortcuts** (not tested yet): a personal automation, for example "when I leave
+  home", that runs Get Current Location, then Get Contents of URL with method POST and a JSON
+  body with `lat` and `lon` from that location.
+
+Another app works too, as long as it sends that message. Pull requests with new recipes are
+welcome.
+
+</details>
+
+### One computer for the family
+
+Each receptor is a full emulator and uses about 4 GB of RAM. One computer can serve a family:
+one fixed receptor for home, and one following receptor for each person who travels. A
+following receptor sleeps while its person is home, so its memory is used only while they are
+away. A 16 GB computer fits home plus two people away at the same time; an 8 GB one fits
+home only. `setup` warns when the receptors would need more than 75% of the RAM.
+
 ## How much warning you get
 
 <p align="center"><img src="docs/warning.svg" alt="Warning time by distance: none at 20 and 50 km, about 10 s at 100 km, 38 s at 200 km, 67 s at 300 km" width="100%"></p>
@@ -106,7 +173,7 @@ users get the alert before the shaking.
 | Google can stop it | Google's anti-abuse system reads the emulator's sensors. It did not block alerts in our tests, and you will get no notice if that changes. |
 | Old location | On 24-Sep-2026 an emulator with a location about 25 hours old missed an alert. `run` reboots it every 18 hours, which leaves about 10 minutes without coverage each time. |
 | AEA never starts | One in eight of our new emulators never registered. After 90 minutes the admin link tells you; delete that emulator and run `setup` again. |
-| The place is fixed, for now | A receptor covers one place. Receptors that follow a person are being built ([design](docs/next-features-design.md)). |
+| A following receptor trails | It moves at most every 5 minutes and Google takes a few minutes more, so the first minutes after a long trip can be uncovered. If OwnTracks stops sending, it stays at the last known place; after 6 hours without a position the admin link tells you. |
 | Duplicates | A retry can deliver the same alert twice. We chose twice over never. |
 | Public topics | Anyone who knows an ntfy.sh topic name can read it. `setup` picks a random name, so keep the link private. |
 | Sleep | If the computer sleeps, the receptor stops. When it wakes, the admin link tells you for how long. Turn sleep off on that machine. |

@@ -69,6 +69,19 @@ final class RelayPolicy {
         return ageMs >= -CLOCK_STEP_TOLERANCE_MS && ageMs < ALERT_TTL_MS;
     }
 
+    /**
+     * Where one alert goes: the receptor's own link first, then the links of people whose own
+     * receptor sleeps nearby. Blank and repeated links are dropped, so nobody gets it twice.
+     */
+    static java.util.List<String> targets(String notifyUrl, java.util.List<String> extraUrls) {
+        java.util.LinkedHashSet<String> targets = new java.util.LinkedHashSet<>();
+        if (notifyUrl != null && !notifyUrl.isEmpty()) targets.add(notifyUrl);
+        for (String url : extraUrls) {
+            if (url != null && !url.isEmpty()) targets.add(url);
+        }
+        return new java.util.ArrayList<>(targets);
+    }
+
     static Float finiteOrNull(Float value) {
         return value != null && Float.isFinite(value) ? value : null;
     }

@@ -32,6 +32,10 @@ PAGES = {
         "connect_p": "Canarito manda cada aviso a un enlace privado de ntfy. Todo lo que se suscriba a ese enlace lo recibe.",
         "connect_1": '<strong>Celular y computador.</strong> La app ntfy en <a href="https://apps.apple.com/app/ntfy/id1625396347">iPhone</a> y <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy">Android</a>, o <a href="https://ntfy.sh/app">ntfy.sh/app</a> en cualquier navegador.',
         "connect_2": "<strong>Algo más fuerte.</strong> Una sirena, un parlante o una luz con Home Assistant, o tu propio script. En iPhone, ntfy no suena en modo silencio: Apple guarda eso para las apps oficiales de alertas.",
+        "follow_h": "Te sigue a donde vayas",
+        "follow_p": "Un receptor puede seguir el celular de una persona en vez de quedarse en un lugar. La app OwnTracks le dice a tu computador dónde estás, y Canarito mueve el receptor contigo.",
+        "follow_1": "<strong>Sin desperdiciar memoria.</strong> Cuando llegas a casa, tu receptor se duerme y el de la casa te avisa a ti también. Cuando sales, se despierta donde estés. La posición se redondea a 1 km.",
+        "follow_2": "<strong>Un computador para toda la familia.</strong> Un receptor fijo para la casa y uno que sigue a cada persona que viaja, unos 4 GB de memoria cada uno. Un computador de 16 GB alcanza para la casa y dos personas fuera al tiempo.",
         "warn_h": "Cuánto aviso tienes",
         "warn_p": "Depende de qué tan lejos estés del epicentro. Google dice que solo el 36% de sus propios usuarios recibe el aviso antes del temblor.",
         "risks_h": "Qué puede fallar",
@@ -41,7 +45,7 @@ PAGES = {
             ("Google lo puede apagar", "Su sistema contra abusos lee los sensores del emulador. En nuestras pruebas no bloqueó los avisos, y si eso cambia nadie te va a avisar."),
             ("Ubicación vieja", "Un emulador con una ubicación de unas 25 horas se perdió un aviso. Canarito lo reinicia cada 18 horas, y cada reinicio deja unos 10 minutos sin cobertura."),
             ("El servicio de Google nunca arranca", "Uno de cada ocho emuladores nuevos nunca se registró. A los 90 minutos Canarito te avisa por el enlace de administración para que lo crees de nuevo."),
-            ("El lugar es fijo, por ahora", "Un receptor cubre un lugar. Estamos construyendo receptores que siguen a una persona."),
+            ("Un receptor que sigue llega tarde", "Se mueve como mucho cada 5 minutos y Google tarda unos minutos más, así que los primeros minutos después de un viaje largo pueden quedar sin cobertura. Si OwnTracks deja de enviar, se queda en el último lugar conocido; a las 6 horas sin posición te avisamos."),
             ("Duplicados", "Un reintento puede mandar el mismo aviso dos veces. Preferimos dos veces a ninguna."),
             ("Enlaces públicos", "Quien conozca el nombre de un tema en ntfy.sh lo puede leer. Canarito inventa un nombre al azar: no lo compartas fuera de tu familia."),
             ("El computador dormido", "Si el computador se suspende, el receptor se detiene. Al despertar, Canarito te dice cuánto tiempo estuvo sin cobertura. Desactiva la suspensión en ese equipo."),
@@ -78,6 +82,10 @@ PAGES = {
         "connect_p": "Canarito sends every alert to a private ntfy link. Anything subscribed to that link gets it.",
         "connect_1": '<strong>Phone and computer.</strong> The ntfy app on <a href="https://apps.apple.com/app/ntfy/id1625396347">iPhone</a> and <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy">Android</a>, or <a href="https://ntfy.sh/app">ntfy.sh/app</a> in any browser.',
         "connect_2": "<strong>Something louder.</strong> A siren, a speaker or a light through Home Assistant, or your own script. On iPhone, ntfy cannot ring through silent mode: Apple keeps that for official alert apps.",
+        "follow_h": "It follows you",
+        "follow_p": "A receptor can follow one person's phone instead of staying at a place. The OwnTracks app tells your computer where you are, and Canarito moves the receptor with you.",
+        "follow_1": "<strong>No wasted memory.</strong> When you get home, your receptor sleeps and the home receptor alerts you too. When you leave, it wakes up wherever you are. Positions are rounded to 1 km.",
+        "follow_2": "<strong>One computer for the whole family.</strong> One fixed receptor for home and one following receptor per person who travels, about 4 GB of memory each. A 16 GB computer fits home and two people away at the same time.",
         "warn_h": "How much warning you get",
         "warn_p": "It depends on how far you are from the epicenter. Google says only 36% of its own users get the alert before the shaking.",
         "risks_h": "What can go wrong",
@@ -87,7 +95,7 @@ PAGES = {
             ("Google can stop it", "Its anti-abuse system reads the emulator's sensors. It did not block alerts in our tests, and nobody will tell you if that changes."),
             ("Old location", "An emulator with a location about 25 hours old missed an alert. Canarito reboots it every 18 hours, and each reboot leaves about 10 minutes without coverage."),
             ("Google's service never starts", "One in eight new emulators never registered. After 90 minutes Canarito tells you on the admin link so you can create it again."),
-            ("The place is fixed, for now", "A receptor covers one place. Receptors that follow a person are being built."),
+            ("A following receptor trails", "It moves at most every 5 minutes and Google takes a few minutes more, so the first minutes after a long trip can be uncovered. If OwnTracks stops sending, it stays at the last known place; after 6 hours without a position we tell you."),
             ("Duplicates", "A retry can send the same alert twice. We chose twice over never."),
             ("Public links", "Anyone who knows an ntfy.sh topic name can read it. Canarito picks a random name: keep it within your family."),
             ("A sleeping computer", "If the computer suspends, the receptor stops. When it wakes, Canarito tells you how long it had no coverage. Turn off sleep on that machine."),
@@ -168,6 +176,12 @@ def page(lang, t):
   <p>{escape(t["connect_p"])}</p>
   <div class="figwrap"><img class="figure" src="/img/connect-{lang}.svg" alt="{connect_alt}" width="1200" height="388"></div>
   <div class="notes"><p>{t["connect_1"]}</p><p>{t["connect_2"]}</p></div>
+</section>
+
+<section>
+  <h2>{escape(t["follow_h"])}</h2>
+  <p>{escape(t["follow_p"])}</p>
+  <div class="notes"><p>{t["follow_1"]}</p><p>{t["follow_2"]}</p></div>
 </section>
 
 <section>

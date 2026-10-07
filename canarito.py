@@ -19,7 +19,9 @@ import platform
 import secrets
 import subprocess
 import sys
+import threading
 import time
+import urllib.parse
 import urllib.request
 from pathlib import Path
 
@@ -50,6 +52,16 @@ SLEPT_AFTER_S = 60
 # An emulator that dies at once must not be relaunched in a tight loop.
 RESTART_EVERY_S = 60
 MISSED_CHECK_EVERY_S = 10 * 60
+# Following receptors. Google takes a new location at most every 5 minutes and only after more
+# than 1 km, so moving more often or for less changes nothing.
+MOVE_AFTER_KM = 1.0
+MOVE_EVERY_S = 5 * 60
+HOME_KM = 5.0
+ASLEEP_AFTER_S = 30 * 60
+# OwnTracks stays quiet while a phone does not move, so silence is normal for hours at night.
+# ponytail: fixed 6 h; a stricter check needs the phone to send a keep-alive.
+NO_POSITION_AFTER_S = 6 * 3600
+EMULATOR_GB = 4
 
 NOTICES = {
     "es": {
@@ -65,6 +77,10 @@ NOTICES = {
         "missed": "Sismo M{mag} a {km} km de “{name}” a las {when} ({sources}). Este receptor no recibió aviso.",
         "possibly": "Posible aviso perdido: sismo M{mag} a {km} km de “{name}” a las {when} ({sources}). Google usa su propia magnitud, así que puede que no haya avisado.",
         "late": "Sismo M{mag} a {km} km de “{name}” a las {when} ({sources}). Solo llegó el aviso tardío de Google, no la alerta temprana.",
+        "location_stale": "Canarito no sabe dónde está “{name}” desde las {since}. Revisa OwnTracks en su celular.",
+        "location_stale_ok": "Canarito volvió a saber dónde está “{name}”.",
+        "location_invalid": "Llegó una posición que Canarito no entiende para “{name}”: {error}",
+        "location_invalid_ok": "Las posiciones de “{name}” vuelven a llegar bien.",
     },
     "en": {
         "emulator_down": "Receptor “{name}” has not answered since {since}.",
@@ -79,6 +95,10 @@ NOTICES = {
         "missed": "Quake M{mag} {km} km from “{name}” at {when} ({sources}). This receptor got no alert.",
         "possibly": "Possibly missed: quake M{mag} {km} km from “{name}” at {when} ({sources}). Google uses its own magnitude, so it may not have alerted.",
         "late": "Quake M{mag} {km} km from “{name}” at {when} ({sources}). Only Google's later notice arrived, not the early alert.",
+        "location_stale": "Canarito has not known where “{name}” is since {since}. Check OwnTracks on their phone.",
+        "location_stale_ok": "Canarito knows where “{name}” is again.",
+        "location_invalid": "A position for “{name}” arrived that Canarito does not understand: {error}",
+        "location_invalid_ok": "Positions for “{name}” arrive fine again.",
     },
 }
 
@@ -109,12 +129,15 @@ def system_image(machine):
     return f"system-images;android-{API_LEVEL};google_apis_playstore;{abi}"
 
 
-def relay_config(config):
-    """What the app reads from files/relay.json. Only what the receptor needs."""
+def relay_config(config, extra_urls=()):
+    """What the app reads from files/relay.json. Only what the receptor needs. extra_urls are the
+    links of people whose own following receptor sleeps near this one."""
     relay = {"notify_url": config["notify_url"], "name": config["name"], "language": config["language"]}
     for optional in ("notify_token", "heartbeat_url"):
         if config.get(optional):
             relay[optional] = config[optional]
+    if extra_urls:
+        relay["extra_urls"] = sorted(extra_urls)
     return json.dumps(relay, separators=(",", ":"), sort_keys=True)
 
 
@@ -156,10 +179,12 @@ def clock_time(epoch_s):
     return time.strftime("%H:%M", time.localtime(epoch_s))
 
 
-def post_notice(url, token, body, priority="default"):
+def post_notice(url, token, body, priority="default", click=None):
     """Never raises: a notice that cannot go out is logged, and the receptor keeps running."""
     request = urllib.request.Request(url, method="POST", data=body.encode(),
                                      headers={"Title": "Canarito", "Priority": priority})
+    if click:
+        request.add_header("Click", click)
     if token:
         request.add_header("Authorization", f"Bearer {token}")
     try:
@@ -230,20 +255,20 @@ def reported_path(name):
     return CONFIG_DIR / f"{name}.reported.json"
 
 
-def check_missed(config, emulator, health, reported):
+def check_missed(config, emulator, health, reported, lat, lon):
     """Tells the admin about quakes this receptor should have caught. Skips the round when the
     evidence cannot be read: no evidence must never read as "no alert"."""
     evidence = emulator.adb("exec-out", "run-as", PACKAGE, "cat", "files/notification-evidence.jsonl", timeout=60)
     if evidence is None:
         return
-    names = config.get("catalogs") or catalogs.catalogs_for(config["lat"], config["lon"])
-    events, failed = catalogs.fetch_events(config["lat"], config["lon"], names, time.time())
+    names = config.get("catalogs") or catalogs.catalogs_for(lat, lon)
+    events, failed = catalogs.fetch_events(lat, lon, names, time.time())
     for failure in failed:
         log(f"catalog not read: {failure}")
     if len(failed) == len(names):
         return
     early, late = alert_times(evidence)
-    for event, km, verdict in catalogs.missed(events, config["lat"], config["lon"], early, late,
+    for event, km, verdict in catalogs.missed(events, lat, lon, early, late,
                                               time.time(), reported):
         health.note(verdict, mag=f"{event['mag']:.1f}", km=f"{km:.0f}", when=clock_time(event["time"]),
                     sources=", ".join(event["sources"]))
@@ -254,11 +279,147 @@ def check_missed(config, emulator, health, reported):
     reported_path(config["name"]).write_text(json.dumps(recent))
 
 
+def parse_position(text):
+    """The location contract: a JSON object with numeric "lat" and "lon". OwnTracks sends exactly
+    that with "_type": "location"; its other messages (status, waypoints) are skipped with None.
+    Anything else raises ValueError, which the admin hears about. Rounded to about 1 km: Google
+    needs no more, and nothing finer is kept."""
+    message = json.loads(text)
+    if not isinstance(message, dict):
+        raise ValueError("not a JSON object")
+    if message.get("_type", "location") != "location":
+        return None
+    lat, lon = message.get("lat"), message.get("lon")
+    if not all(isinstance(value, (int, float)) and not isinstance(value, bool) for value in (lat, lon)):
+        raise ValueError("lat and lon must be numbers")
+    check_coordinates(lat, lon)
+    return round(lat, 2), round(lon, 2)
+
+
+def fixed_receptors():
+    """(name, lat, lon) of every receptor on this computer that stays at its place."""
+    found = []
+    for path in sorted(CONFIG_DIR.glob("*.json")):
+        try:
+            config = json.loads(path.read_text())
+            if "avd" in config and not config.get("follow"):
+                found.append((config["name"], config["lat"], config["lon"]))
+        except (OSError, ValueError, KeyError, TypeError):
+            continue
+    return found
+
+
+class Follower:
+    """Decides what a following receptor does. Pure, so it can be tested without an emulator:
+    feed it positions, call step() on every loop, act on what it returns."""
+
+    def __init__(self, home_receptors, clock=time.monotonic):
+        self.home_receptors = home_receptors
+        self.clock = clock
+        self.position = None
+        self.applied = None
+        self.applied_at = None
+        self.near = None
+        self.near_since = None
+        self.asleep = False
+
+    def update(self, lat, lon):
+        self.position = (lat, lon)
+
+    def nearest_home(self):
+        if not self.position or not self.home_receptors:
+            return None
+        km, name = min((catalogs.km_between(*self.position, lat, lon), name)
+                       for name, lat, lon in self.home_receptors)
+        return name if km <= HOME_KM else None
+
+    def step(self):
+        """One of "sleep", "wake", "move" or None."""
+        if not self.position:
+            return None
+        now = self.clock()
+        near = self.nearest_home()
+        if near != self.near:
+            self.near, self.near_since = near, now
+        if self.asleep:
+            if near is None:
+                self.asleep = False
+                # It boots where the person is now, so that counts as the move.
+                self.applied, self.applied_at = self.position, now
+                return "wake"
+            return None
+        if near and now - self.near_since >= ASLEEP_AFTER_S:
+            self.asleep = True
+            return "sleep"
+        if self.applied is None or (
+                catalogs.km_between(*self.applied, *self.position) > MOVE_AFTER_KM
+                and now - self.applied_at >= MOVE_EVERY_S):
+            self.applied, self.applied_at = self.position, now
+            return "move"
+        return None
+
+
+def status_path(name):
+    return CONFIG_DIR / f"{name}.status.json"
+
+
+def sleeping_neighbours(my_name):
+    """Alert links of people whose following receptor sleeps near this fixed receptor."""
+    links = []
+    for path in CONFIG_DIR.glob("*.status.json"):
+        try:
+            status = json.loads(path.read_text())
+        except (OSError, ValueError):
+            continue
+        if status.get("asleep") and status.get("near") == my_name and status.get("notify_url"):
+            links.append(status["notify_url"])
+    return sorted(links)
+
+
+def follow_locations(url, token, on_message):
+    """Reads the location link for ever, on its own thread. ntfy streams one JSON line per event;
+    a dropped connection is retried, never fatal."""
+    subscribe = urllib.parse.urlsplit(url)._replace(query="").geturl().rstrip("/") + "/json"
+    while True:
+        request = urllib.request.Request(subscribe)
+        if token:
+            request.add_header("Authorization", f"Bearer {token}")
+        try:
+            with urllib.request.urlopen(request, timeout=90) as stream:
+                for line in stream:
+                    event = json.loads(line)
+                    if event.get("event") == "message":
+                        on_message(event.get("message", ""))
+        except (OSError, ValueError) as error:
+            log(f"location link: {error}; reconnecting")
+        time.sleep(10)
+
+
+def owntracks_link(location_url, name):
+    """Opens OwnTracks already pointed at the location link: HTTP mode, moves only."""
+    settings = {"_type": "configuration", "mode": 3, "url": location_url, "monitoring": 1,
+                "username": name, "deviceId": "canarito", "tid": name[:2]}
+    encoded = base64.b64encode(json.dumps(settings).encode()).decode()
+    return "owntracks:///config?inline=" + urllib.parse.quote(encoded, safe="")
+
+
+def total_ram_gb():
+    try:
+        if sys.platform == "darwin":
+            return int(subprocess.run(["sysctl", "-n", "hw.memsize"], capture_output=True, text=True).stdout) / 2**30
+        with open("/proc/meminfo") as meminfo:
+            return int(meminfo.readline().split()[1]) / 2**20
+    except (OSError, ValueError):
+        return None
+
+
 class Emulator:
     def __init__(self, config):
         self.config = config
         self.serial = f"emulator-{config['port']}"
         self.adb_path = sdk_tool("platform-tools", "adb")
+        self.position = (config["lat"], config["lon"])
+        self.extra_urls = []
 
     def adb(self, *args, timeout=30, check=False):
         try:
@@ -297,7 +458,10 @@ class Emulator:
 
     def geo_fix(self):
         # The console wants longitude first.
-        self.adb("emu", "geo", "fix", str(self.config["lon"]), str(self.config["lat"]), timeout=5)
+        self.adb("emu", "geo", "fix", str(self.position[1]), str(self.position[0]), timeout=5)
+
+    def stop(self):
+        self.adb("emu", "kill", timeout=20)
 
     def aea_registered(self):
         """Play Services' earthquake code asks for location under this name once it is alive.
@@ -317,7 +481,10 @@ class Emulator:
         if (self.adb("shell", "cmd", "location", "is-location-enabled") or "").strip() != "true":
             # Only when off: switching it off and on wipes the last location.
             self.adb("shell", "cmd", "location", "set-location-enabled", "true", check=True)
-        relay_json = relay_config(self.config)
+        self.write_relay()
+
+    def write_relay(self):
+        relay_json = relay_config(self.config, self.extra_urls)
         for attempt in range(3):
             self.adb("shell", write_relay_command(relay_json))
             # Without a sync a stop soon after can lose the file.
@@ -338,6 +505,9 @@ def setup(args):
     # A random topic: anyone who knows an ntfy.sh topic name can read it and post to it.
     notify_url = args.notify_url or existing.get("notify_url") or f"https://ntfy.sh/canarito-{secrets.token_hex(12)}"
     admin_url = args.admin_url or existing.get("admin_url") or f"https://ntfy.sh/canarito-admin-{secrets.token_hex(12)}"
+    # cache=no: ntfy passes each position on and stores none.
+    location_url = (args.location_url or existing.get("location_url")
+                    or f"https://ntfy.sh/canarito-where-{secrets.token_hex(12)}?cache=no") if args.follow else ""
     config = {
         "name": args.name,
         "avd": f"canarito-{args.name}",
@@ -350,6 +520,15 @@ def setup(args):
         "heartbeat_url": args.heartbeat_url or existing.get("heartbeat_url", ""),
         "language": args.language,
     }
+    if args.follow:
+        config["follow"] = True
+        config["location_url"] = location_url
+    others = [path for path in CONFIG_DIR.glob("*.json")
+              if path.name.count(".") == 1 and path != config_path(args.name)]
+    ram = total_ram_gb()
+    if ram and (len(others) + 1) * EMULATOR_GB > 0.75 * ram:
+        print(f"WARNING: {len(others) + 1} receptors need about {(len(others) + 1) * EMULATOR_GB} GB of RAM and this "
+              f"computer has {ram:.0f} GB. An emulator without memory is killed while it boots.")
     image = system_image(platform.machine())
     sdkmanager = sdk_tool("cmdline-tools", "latest", "bin", "sdkmanager")
     image_dir = sdk_root().joinpath(*image.split(";"))
@@ -381,6 +560,19 @@ It tells you when this receptor stops working and when it is back, and about qua
 Then start it, and leave it running:
   canarito.py run --name {args.name}
 """)
+    if args.follow:
+        link = owntracks_link(location_url, args.name)
+        sent = post_notice(notify_url, config["notify_token"], "Toca aquí con OwnTracks instalado para que Canarito "
+                           "te siga. / Tap here with OwnTracks installed so Canarito can follow you.", click=link)
+        print(f"""This receptor follows {args.name}. On {args.name}'s phone:
+  1. Subscribe ntfy to the link above.
+  2. Install OwnTracks (App Store or Google Play).
+  3. Tap the Canarito message that just arrived{"" if sent else " (it could not be sent; open the link below instead)"}.
+     It opens OwnTracks already set up. The same link: {link}
+""")
+        if urllib.parse.urlsplit(location_url).hostname == "ntfy.sh":
+            print("The position passes through ntfy.sh on its way to this computer. ntfy.sh does not store it,\n"
+                  "but it sees it. To keep it on your own server, run setup again with --location-url.\n")
 
 
 def run(args):
@@ -403,6 +595,30 @@ def run(args):
     except (OSError, ValueError, TypeError):
         reported = {}
     started_at = -RESTART_EVERY_S
+    follower = None
+    if config.get("follow"):
+        follower = Follower(fixed_receptors())
+        positions, invalid = [], []
+
+        def on_message(text):
+            try:
+                position = parse_position(text)
+            except ValueError as error:
+                invalid.append(str(error))
+                return
+            if position:
+                positions.append(position)
+
+        try:
+            saved = json.loads(status_path(config["name"]).read_text()).get("position")
+        except (OSError, ValueError):
+            saved = None
+        if saved:
+            follower.update(*saved)
+            emulator.position = tuple(saved)
+        last_position_at = time.time()
+        threading.Thread(target=follow_locations, daemon=True,
+                         args=(config["location_url"], config.get("notify_token"), on_message)).start()
     last_wall, last_mono = time.time(), time.monotonic()
     while True:
         # Monotonic time stops while the computer sleeps; the wall clock does not.
@@ -410,6 +626,38 @@ def run(args):
         if (wall - last_wall) - (mono - last_mono) > SLEPT_AFTER_S:
             health.note("slept", start=clock_time(last_wall), end=clock_time(wall))
         last_wall, last_mono = wall, mono
+
+        if follower:
+            while positions:
+                follower.update(*positions.pop(0))
+                last_position_at = wall
+                health.clear("location_stale")
+                health.clear("location_invalid")
+            if invalid:
+                health.problem("location_invalid", error=invalid[-1])
+                invalid.clear()
+            if wall - last_position_at > NO_POSITION_AFTER_S:
+                health.problem("location_stale")
+            action = follower.step()
+            if action in ("move", "wake"):
+                emulator.position = follower.position
+            if action == "move":
+                log(f"moving to {follower.position[0]}, {follower.position[1]}")
+            elif action == "sleep":
+                log(f"asleep: {config['name']} is home, near {follower.near}")
+                emulator.stop()
+            elif action == "wake":
+                log(f"awake: {config['name']} left home")
+            if action:
+                status_path(config["name"]).write_text(json.dumps({
+                    "asleep": follower.asleep, "near": follower.near, "notify_url": config["notify_url"],
+                    "position": follower.position}))
+            if follower.asleep:
+                down_since = None
+                health.clear("emulator_down")
+                health.tick()
+                time.sleep(IDLE_EVERY_S)
+                continue
 
         uptime = emulator.uptime_s()
         if uptime is None:
@@ -423,7 +671,8 @@ def run(args):
             down_since = None
             health.clear("emulator_down")
         booting = uptime is None or uptime < BOOT_WINDOW_S
-        if booting:
+        # A following receptor repeats its fix: one fix is enough with the GPS keeper, a repeat is free.
+        if booting or follower:
             emulator.geo_fix()
         if uptime is not None and emulator.booted():
             boot_id = emulator.boot_id()
@@ -451,9 +700,18 @@ def run(args):
                 emulator.adb("reboot")
                 # Long enough for the guest to drop off adb, so this does not fire twice.
                 time.sleep(IDLE_EVERY_S)
+            if not follower and provisioned_boot == boot_id:
+                neighbours = sleeping_neighbours(config["name"])
+                if neighbours != emulator.extra_urls:
+                    emulator.extra_urls = neighbours
+                    try:
+                        emulator.write_relay()
+                        log(f"also sending to {len(neighbours)} sleeping following receptor(s)")
+                    except RuntimeError as error:
+                        log(f"could not update the links: {error}")
             if mono - missed_checked_at > MISSED_CHECK_EVERY_S:
                 missed_checked_at = mono
-                check_missed(config, emulator, health, reported)
+                check_missed(config, emulator, health, reported, *emulator.position)
         health.tick()
         time.sleep(FIX_EVERY_S if booting else IDLE_EVERY_S)
 
@@ -499,6 +757,9 @@ def main(argv=None):
     setup_parser.add_argument("--lat", type=float, required=True)
     setup_parser.add_argument("--lon", type=float, required=True)
     setup_parser.add_argument("--notify-url", help="ntfy topic URL (default: a new random ntfy.sh topic)")
+    setup_parser.add_argument("--follow", action="store_true",
+                              help="this receptor follows one person's phone (lat/lon is where it starts)")
+    setup_parser.add_argument("--location-url", help="ntfy topic URL the phone posts its position to")
     setup_parser.add_argument("--admin-url", help="ntfy topic URL for health notices (default: a new random ntfy.sh topic)")
     setup_parser.add_argument("--notify-token", help="ntfy access token, for a protected topic")
     setup_parser.add_argument("--heartbeat-url", help="pinged every 5 min, e.g. a healthchecks.io check")
