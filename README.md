@@ -54,6 +54,10 @@ the ntfy app on [iPhone](https://apps.apple.com/app/ntfy/id1625396347) or
 Home Assistant has an ntfy integration, and `curl -s ntfy.sh/<topic>/json` works in a
 script. On Android, mark the subscription as urgent so it rings.
 
+On iPhone, ntfy cannot ring through silent mode or Focus: Apple keeps that for official alert
+apps. If you want something louder, a siren, a speaker or a light, subscribe it to the same
+link. Anything that can read ntfy can act on the alert.
+
 `python3 canarito.py test --name home` sends a test message to every subscribed device and
 checks the emulator.
 
