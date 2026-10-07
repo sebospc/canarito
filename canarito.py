@@ -224,10 +224,10 @@ def setup(args):
     print(f"""
 Receptor "{args.name}" ready at {args.lat}, {args.lon}.
 
-On each phone that should get the alerts:
-  1. Install the ntfy app (App Store or Google Play).
+On each device that should get the alerts:
+  1. Install ntfy (App Store, Google Play) or open https://ntfy.sh/app in a browser.
   2. Subscribe to: {notify_url}
-  3. On iPhone allow notifications; on Android set the topic to "urgent" so it can ring.
+  3. Allow notifications. On Android, set the subscription to "urgent" so it can ring.
 
 Then start it, and leave it running:
   canarito.py run --name {args.name}
