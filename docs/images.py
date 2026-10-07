@@ -74,7 +74,10 @@ def quake(cx, cy):
 def banner():
     seismogram = [(70, 290), (430, 290), (450, 282), (466, 300), (482, 262), (498, 318), (514, 248),
                   (530, 330), (546, 270), (562, 306), (578, 280), (600, 294), (630, 288), (1130, 290)]
-    body = (bird(70, 52, 150, stroke=10)
+    # The canarito.app icon as it is: page-colored tile, bird at the small-size stroke.
+    app_icon = (f'<rect x="70" y="56" width="148" height="148" rx="34" fill="{PAGE}" stroke="{LINE}" stroke-width="2"/>'
+                + bird(82.4, 68, 124, stroke=14))
+    body = (app_icon
             + text(250, 150, "Canarito", 96, TEXT, 800, family=DISPLAY)
             + text(254, 205, "Earthquake early warnings on any device you own.", 30, SUB)
             + line(seismogram, TEAL, 2.5) + text(1130, 330, "Avisos de sismo · open source", 20, SUB, anchor="end"))
@@ -181,5 +184,5 @@ def warning():
 
 
 if __name__ == "__main__":
-    for name, draw in (("banner", banner), ("mesh", mesh), ("connect", connect), ("warning", warning)):
+    for name, draw in (("canarito-banner", banner), ("mesh", mesh), ("connect", connect), ("warning", warning)):
         (HERE / f"{name}.svg").write_text(draw())

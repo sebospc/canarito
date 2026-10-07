@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="docs/banner.svg" alt="Canarito: earthquake early warnings on any device you own" width="100%">
+  <img src="docs/canarito-banner.svg" alt="Canarito: earthquake early warnings on any device you own" width="100%">
 </p>
 
 Android phones get earthquake early warnings from Google. Canarito brings them to everything
