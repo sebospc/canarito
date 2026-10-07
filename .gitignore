@@ -4,3 +4,4 @@ local.properties
 __pycache__/
 .idea/
 *.iml
+.wrangler/

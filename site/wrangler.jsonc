@@ -1,0 +1,11 @@
+{
+  // canarito.app: a Cloudflare Worker serving public/ as static files.
+  // Build with `python3 site/build.py`, deploy from this folder with `npx wrangler deploy`.
+  "name": "canarito-landing",
+  "compatibility_date": "2026-10-01",
+  "assets": { "directory": "./public" },
+  "routes": [
+    { "pattern": "canarito.app", "custom_domain": true },
+    { "pattern": "www.canarito.app", "custom_domain": true }
+  ]
+}

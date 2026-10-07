@@ -1,0 +1,87 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Canarito: avisos de sismo en cualquier dispositivo</title>
+<meta name="description" content="Canarito corre en tu computador y manda los avisos de sismo de Android a tu iPhone, tu computador o lo que quieras. Gratis y de código abierto.">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="alternate" hreflang="en" href="https://canarito.app/en/">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://canarito.app/">
+<meta property="og:title" content="Canarito: avisos de sismo en cualquier dispositivo">
+<meta property="og:description" content="Canarito corre en tu computador y manda los avisos de sismo de Android a tu iPhone, tu computador o lo que quieras. Gratis y de código abierto.">
+<meta property="og:image" content="https://canarito.app/og.png">
+<meta property="og:image:width" content="1200">
+<meta property="og:image:height" content="630">
+<meta property="og:locale" content="es_CO">
+<meta name="twitter:card" content="summary_large_image">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="brand" href="/" aria-label="Canarito"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M8 64 C27 72 33 40 57 33 C70 29 79 34 84 41 L95 44 L84 49 C80 65 63 75 40 73" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="wm">Canarito</span></a>
+  <a class="lang" href="/en/" hreflang="en" lang="en">English</a>
+</header>
+<main>
+<div class="hero">
+  <h1>Unos segundos pueden cambiarlo todo.</h1>
+  <p class="claim">Los avisos de sismo de Android, en cualquier dispositivo.</p>
+  <p class="lead">Canarito corre en tu computador y manda los avisos de sismo a tu iPhone, a tu computador o a lo que quieras. Gratis y de código abierto.</p>
+  <div class="actions"><a class="button" href="https://github.com/sebospc/canarito">Ver en GitHub</a><p class="caveat">No es oficial y puede fallar. <a href="#fallas">Lee qué puede fallar</a>.</p></div>
+  <div class="trio">
+    <div class="phone" role="img" aria-label="Celular bloqueado con la notificación de ntfy: Alerta de sismo"><div class="screen"><div class="island"></div>
+      <p class="clock">10:24</p>
+      <div class="notif"><span class="ntfy"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="M10 27V19a10 10 0 0 1 20 0v8l2.5 3.5h-25zM16.5 34.5a3.5 3.5 0 0 0 7 0" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Alerta de sismo</b>Sismo M4.5 cerca de su zona. Protéjase ahora.</div></div>
+    </div></div>
+    <div class="laptop" role="img" aria-label="Computador con la notificación del navegador"><div class="lid"><div class="web"><div class="bar"></div>
+      <div class="toast"><b>Alerta de sismo</b>Sismo M4.5 cerca de su zona. Protéjase ahora.<br><span>ntfy.sh · ahora</span></div></div></div><div class="base"></div></div>
+    <div class="lamp"><div class="glow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-3.5 10.9c.6.5 1 1.2 1 2V16h5v-.1c0-.8.4-1.5 1-2A6 6 0 0 0 12 3z" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>La luz de la sala, por Home Assistant</div>
+  </div>
+</div>
+
+<section>
+  <h2>Cómo funciona</h2>
+  <p>Google decide quién recibe un aviso según la ubicación que reporta cada aparato. Un emulador de Android con una ubicación fija basta.</p>
+  <div class="figwrap"><img class="figure" src="/img/mesh-es.svg" alt="Sismo, Google, receptores en tu computador, ntfy y cualquier aparato suscrito" width="1200" height="556"></div>
+  <div class="notes"><p><strong>Probado con sismos reales.</strong> En septiembre de 2026, dos sismos en Colombia llegaron a nuestros emuladores. Los que estaban dentro del radio del aviso lo recibieron; los que estaban a 478 km, no.</p><p><strong>Sin servidor.</strong> El emulador corre en tu computador y ntfy, un servicio gratis, lleva el aviso a tus aparatos. Si quieres todo bajo tu control, puedes montar tu propio ntfy.</p></div>
+</section>
+
+<section>
+  <h2>Conecta lo que quieras</h2>
+  <p>Canarito manda cada aviso a un enlace privado de ntfy. Todo lo que se suscriba a ese enlace lo recibe.</p>
+  <div class="figwrap"><img class="figure" src="/img/connect-es.svg" alt="Instala ntfy, suscríbete a tu enlace y el próximo aviso llega a ese aparato" width="1200" height="388"></div>
+  <div class="notes"><p><strong>Celular y computador.</strong> La app ntfy en <a href="https://apps.apple.com/app/ntfy/id1625396347">iPhone</a> y <a href="https://play.google.com/store/apps/details?id=io.heckel.ntfy">Android</a>, o <a href="https://ntfy.sh/app">ntfy.sh/app</a> en cualquier navegador.</p><p><strong>Algo más fuerte.</strong> Una sirena, un parlante o una luz con Home Assistant, o tu propio script. En iPhone, ntfy no suena en modo silencio: Apple guarda eso para las apps oficiales de alertas.</p></div>
+</section>
+
+<section>
+  <h2>Cuánto aviso tienes</h2>
+  <p>Depende de qué tan lejos estés del epicentro. Google dice que solo el 36% de sus propios usuarios recibe el aviso antes del temblor.</p>
+  <div class="figwrap"><img class="figure" src="/img/warning-es.svg" alt="Tiempo de aviso por distancia: nada a 20 y 50 km, unos 10 s a 100 km, 38 s a 200 km, 67 s a 300 km" width="1200" height="570"></div>
+</section>
+
+<section id="fallas">
+  <h2>Qué puede fallar</h2>
+  <p>Léelo antes de confiar en Canarito para algo importante.</p>
+  <div class="risks"><div class="risk"><b>Los términos de Google</b><p>La licencia del emulador es solo para desarrollar apps, y los datos de Google no se pueden redistribuir sin permiso. Usarlo es decisión tuya.</p></div><div class="risk"><b>Google lo puede apagar</b><p>Su sistema contra abusos lee los sensores del emulador. En nuestras pruebas no bloqueó los avisos, y si eso cambia nadie te va a avisar.</p></div><div class="risk"><b>Ubicación vieja</b><p>Un emulador con una ubicación de unas 25 horas se perdió un aviso. Canarito lo reinicia cada 18 horas, y cada reinicio deja unos 10 minutos sin cobertura.</p></div><div class="risk"><b>El servicio de Google nunca arranca</b><p>Uno de cada ocho emuladores nuevos nunca se registró. Canarito te avisa a los 90 minutos para que lo crees de nuevo.</p></div><div class="risk"><b>Una falla sin explicación</b><p>Un emulador con una cuenta personal de Google no recibió un aviso que sí recibió otro sin cuenta. Nunca supimos por qué.</p></div><div class="risk"><b>El lugar es fijo</b><p>Si viajas, sigues recibiendo los avisos de tu casa.</p></div><div class="risk"><b>Duplicados</b><p>Un reintento puede mandar el mismo aviso dos veces. Preferimos dos veces a ninguna.</p></div><div class="risk"><b>Enlaces públicos</b><p>Quien conozca el nombre de un tema en ntfy.sh lo puede leer. Canarito inventa un nombre al azar: no lo compartas fuera de tu familia.</p></div><div class="risk"><b>El computador dormido</b><p>Si el computador se suspende, el receptor se detiene. Desactiva la suspensión en ese equipo.</p></div></div>
+</section>
+
+<section>
+  <h2>Empieza</h2>
+  <p>Necesitas macOS o Linux, Python 3.9, Java 17 y las herramientas de línea de comandos de Android.</p>
+<pre><code>git clone https://github.com/sebospc/canarito.git && cd canarito
+echo "sdk.dir=$ANDROID_HOME" > local.properties
+./gradlew :android:assembleDebug                                  <span class="c"># la app que va dentro del emulador</span>
+python3 canarito.py setup --name home --lat 4.711 --lon -74.072   <span class="c"># tu lugar, desde cualquier mapa</span>
+python3 canarito.py run --name home                               <span class="c"># déjalo corriendo</span></code></pre>
+  <p class="after">La primera vez, el servicio de sismos de Google tarda de 15 a 60 minutos en arrancar dentro del emulador. Espera la línea <code>AEA registered</code>. Las instrucciones completas están en GitHub.</p>
+  <div class="actions"><a class="button" href="https://github.com/sebospc/canarito">Ver en GitHub</a></div>
+</section>
+</main>
+<footer><span>Canarito · código abierto, licencia MIT</span><span>No está afiliado a Google. Android Earthquake Alerts es un servicio de Google.</span></footer>
+</div>
+</body>
+</html>

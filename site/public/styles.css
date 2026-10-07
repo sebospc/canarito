@@ -1,0 +1,94 @@
+/* Night teal is the brand. Canary yellow appears only in the bird and the alert. */
+:root{--page:#F3F6F6;--surf:#FFFFFF;--text:#0E1517;--sub:#4A5B5E;--line:#D5E1E1;--accent:#0F6E66;--bird:#0F3B38;--canary:#F5C842;--onCanary:#1E1700;--late:#C2452A;--device:#0B0F10;--code:#0E1517}
+@media (prefers-color-scheme:dark){:root{--page:#0E1517;--surf:#172226;--text:#E4ECEC;--sub:#9DB0B2;--line:#26353A;--accent:#56C2B6;--bird:#F5C842;--late:#F08A6E;--device:#05090A;--code:#05090A}}
+@font-face{font-family:"Bricolage Grotesque";src:url("/fonts/bricolage-grotesque.woff2") format("woff2");font-weight:200 800;font-display:swap}
+:root{--display:"Bricolage Grotesque",ui-rounded,system-ui,sans-serif}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:var(--page);color:var(--text);font:18px/1.55 -apple-system,system-ui,"Segoe UI",Roboto,sans-serif}
+h1,h2,h3,.wm{font-family:var(--display);line-height:1.08;margin:0;letter-spacing:-.02em}
+p{margin:0}
+a{color:var(--accent);text-underline-offset:3px}
+a:focus-visible{outline:3px solid var(--accent);outline-offset:2px}
+.wrap{max-width:1080px;margin:0 auto;padding:0 16px}
+
+header{display:flex;align-items:center;justify-content:space-between;padding:20px 0}
+.brand{display:flex;align-items:center;gap:10px;color:var(--bird);text-decoration:none}
+.brand svg{width:40px;height:40px}
+.wm{font-size:24px;font-weight:800;color:var(--text)}
+.lang{font:600 15px/1 -apple-system,system-ui;color:var(--text);border:1px solid var(--line);border-radius:10px;padding:14px;text-decoration:none}
+.lang:hover{background:var(--surf)}
+
+/* Hero: the claim, then three devices getting the same alert. */
+.hero{padding:40px 0 72px}
+.hero h1{font-size:64px;font-weight:800;max-width:760px;letter-spacing:-.025em}
+.claim{font-family:var(--display);font-size:28px;font-weight:700;line-height:1.15;margin-top:18px;max-width:640px}
+.lead{font-size:21px;color:var(--sub);margin-top:14px;max-width:620px}
+.actions{display:flex;flex-wrap:wrap;gap:12px 20px;align-items:center;margin-top:28px}
+.button{display:inline-block;background:var(--text);color:var(--page);font-weight:700;text-decoration:none;border-radius:12px;padding:14px 22px}
+.button:hover{opacity:.88}
+.caveat{font-size:15px;color:var(--sub)}
+.trio{display:flex;gap:32px;align-items:flex-end;justify-content:center;flex-wrap:wrap;margin-top:56px}
+
+/* The phone and the laptop: drawn in CSS so the alert text stays real text. */
+.phone{width:220px;aspect-ratio:300/630;border-radius:40px;background:var(--device);padding:9px;box-shadow:0 0 0 1px rgba(127,150,154,.28),0 30px 60px -30px rgba(6,20,22,.45)}
+.screen{height:100%;border-radius:32px;background:#16262A;color:#E4ECEC;display:flex;flex-direction:column;align-items:center;padding:40px 12px 16px;position:relative}
+.island{position:absolute;top:9px;left:50%;width:72px;height:22px;margin-left:-36px;border-radius:12px;background:#000}
+.clock{font:200 56px/1 -apple-system,system-ui;letter-spacing:-.02em;margin-top:22px}
+.notif{display:flex;gap:9px;width:100%;background:rgba(228,236,236,.16);border-radius:16px;padding:10px;margin-top:28px;font-size:12px;line-height:1.35;text-align:left}
+.notif b{display:block;font-size:13px}
+.ntfy{flex:none;width:30px;height:30px;border-radius:8px;background:#317F6F;color:#fff;display:flex;align-items:center;justify-content:center}
+.ntfy svg{width:18px;height:18px}
+.laptop{width:340px}
+.lid{background:var(--device);border-radius:16px 16px 4px 4px;padding:10px}
+.web{background:#F3F6F6;border-radius:8px;aspect-ratio:16/10;position:relative;overflow:hidden}
+.web .bar{height:22px;background:#D5E1E1}
+.toast{position:absolute;right:10px;top:32px;width:210px;background:#fff;color:#0E1517;border-radius:10px;padding:10px 12px;font-size:12px;line-height:1.35;box-shadow:0 8px 24px -10px rgba(6,20,22,.5)}
+.toast b{display:block;font-size:13px}
+.toast span{color:#4A5B5E}
+.base{height:12px;background:#2A3538;border-radius:0 0 12px 12px;margin:0 -18px}
+.lamp{width:150px;text-align:center;font-size:14px;color:var(--sub)}
+.glow{width:118px;height:118px;margin:0 auto 14px;border-radius:50%;background:var(--canary);box-shadow:0 0 0 14px rgba(245,200,66,.18),0 0 0 30px rgba(245,200,66,.08);display:flex;align-items:center;justify-content:center;color:var(--onCanary)}
+.glow svg{width:54px;height:54px}
+
+section{padding:72px 0;border-top:1px solid var(--line)}
+section h2{font-size:44px;font-weight:800;max-width:720px}
+section h2+p{font-size:20px;color:var(--sub);margin-top:16px;max-width:680px}
+.figwrap{margin-top:36px;overflow-x:auto;border-radius:22px}
+.figure{display:block;width:100%;height:auto;border-radius:22px}
+.notes{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:24px 48px;margin-top:32px}
+.notes p{color:var(--sub);max-width:480px}
+.notes strong{color:var(--text)}
+
+/* Risks: visible, never fine print. */
+.risks{margin-top:32px;display:grid;gap:2px;background:var(--line);border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.risk{display:grid;grid-template-columns:220px minmax(0,1fr);gap:24px;background:var(--surf);padding:18px 22px}
+.risk b{font-family:var(--display);font-size:19px}
+.risk p{color:var(--sub);font-size:17px}
+
+pre{background:var(--code);color:#E4ECEC;border-radius:16px;padding:22px 24px;overflow-x:auto;font-size:15px;line-height:1.7;margin:32px 0 0}
+pre .c{color:#9DB0B2}
+.after{color:var(--sub);margin-top:18px;max-width:680px}
+
+footer{border-top:1px solid var(--line);padding:28px 0 48px;font-size:15px;color:var(--sub);display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap}
+
+@media (max-width:860px){
+  .hero{padding:20px 0 56px}
+  .hero h1{font-size:42px}
+  .claim{font-size:23px}
+  .trio{gap:24px;margin-top:40px}
+  .laptop{width:300px}
+  section{padding:56px 0}
+  section h2{font-size:32px}
+  .notes{grid-template-columns:minmax(0,1fr)}
+  .risk{grid-template-columns:minmax(0,1fr);gap:6px}
+  /* The diagrams stay readable: they scroll sideways instead of shrinking to nothing. */
+  .figure{width:780px;max-width:none}
+}
+@media (prefers-reduced-motion:no-preference){
+  .hero>*{animation:rise .7s cubic-bezier(.2,.7,.2,1) both}
+  .hero .trio{animation-delay:.15s}
+  .notif,.toast,.glow{animation:drop .6s cubic-bezier(.2,.7,.2,1) .9s both}
+}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+@keyframes drop{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
