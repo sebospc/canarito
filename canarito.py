@@ -1,0 +1,347 @@
+#!/usr/bin/env python3
+"""Canarito: run an Android emulator that receives Google's earthquake early warnings at a
+place you choose, and forward them to your phone through ntfy.
+
+    canarito.py setup --name home --lat 4.711 --lon -74.072
+    canarito.py run --name home
+    canarito.py test --name home
+    canarito.py evidence --name home
+
+Needs Python 3.9+, a JDK only if you build the APK yourself, and the Android SDK command line
+tools (sdkmanager, avdmanager) with ANDROID_HOME set. Read README.md first: this is not an
+official alert system and it can miss alerts.
+"""
+import argparse
+import base64
+import json
+import os
+import platform
+import secrets
+import subprocess
+import sys
+import time
+import urllib.request
+from pathlib import Path
+
+PACKAGE = "app.canarito.receptor"
+LISTENER = f"{PACKAGE}/.CaptureService"
+CONFIG_DIR = Path(os.environ.get("CANARITO_HOME", Path.home() / ".canarito"))
+DEFAULT_APK = Path(__file__).resolve().parent / "android/build/outputs/apk/debug/android-debug.apk"
+API_LEVEL = 35
+# Play Services asks for a GPS fix once, some 5-7 minutes into a boot, and AEA keeps that
+# position. A geo fix sent later changes nothing, so it is repeated through the whole window.
+BOOT_WINDOW_S = 12 * 60
+FIX_EVERY_S = 3
+IDLE_EVERY_S = 30
+# An alert was lost on 24-sep-2026 with a ~25 h old location. A fresh boot gets a fresh fix.
+# ponytail: blind reboot, ~10 min without coverage each time; reading AEA's own location
+# age from dumpsys (the old sensor-health.py) avoids the gap if it ever matters.
+REBOOT_EVERY_S = 18 * 60 * 60
+# A new emulator took 13 to 60 min before AEA registered, and 1 in 8 never did.
+AEA_CHECK_EVERY_S = 5 * 60
+AEA_GIVE_UP_S = 90 * 60
+
+
+def log(message):
+    print(time.strftime("%Y-%m-%d %H:%M:%S"), message, flush=True)
+
+
+def sdk_root():
+    root = os.environ.get("ANDROID_HOME") or os.environ.get("ANDROID_SDK_ROOT")
+    if not root:
+        sys.exit("Set ANDROID_HOME to your Android SDK (see README.md, Install).")
+    return Path(root)
+
+
+def sdk_tool(*parts):
+    tool = sdk_root().joinpath(*parts)
+    if not tool.exists():
+        sys.exit(f"Missing {tool}. Install the Android SDK command line tools (README.md, Install).")
+    return str(tool)
+
+
+def system_image(machine):
+    """An arm64 image on Apple Silicon and ARM Linux; an x86_64 one runs there only translated, if at all."""
+    abi = "arm64-v8a" if machine.lower() in ("arm64", "aarch64") else "x86_64"
+    # Play Store image: AEA ships inside Play Services, which plain google_apis images also have,
+    # but this is the one measured receiving a real alert.
+    return f"system-images;android-{API_LEVEL};google_apis_playstore;{abi}"
+
+
+def relay_config(config):
+    """What the app reads from files/relay.json. Only what the receptor needs."""
+    relay = {"notify_url": config["notify_url"], "name": config["name"], "language": config["language"]}
+    for optional in ("notify_token", "heartbeat_url"):
+        if config.get(optional):
+            relay[optional] = config[optional]
+    return json.dumps(relay, separators=(",", ":"), sort_keys=True)
+
+
+def write_relay_command(relay_json):
+    """Written from an argument, not stdin: adb sometimes delivered no stdin and left the file
+    empty, and an empty relay.json is a receptor that never sends anything."""
+    encoded = base64.b64encode(relay_json.encode()).decode()
+    return f"run-as {PACKAGE} sh -c 'mkdir -p files && echo {encoded} | base64 -d > files/relay.json'"
+
+
+def check_coordinates(lat, lon):
+    if not (-90 <= lat <= 90 and -180 <= lon <= 180):
+        raise ValueError(f"lat {lat}, lon {lon} is not a place on Earth")
+
+
+def config_path(name):
+    return CONFIG_DIR / f"{name}.json"
+
+
+def load_config(name):
+    try:
+        return json.loads(config_path(name).read_text())
+    except FileNotFoundError:
+        sys.exit(f"No receptor called {name}. Run: canarito.py setup --name {name} --lat ... --lon ...")
+
+
+def free_port():
+    """Each receptor gets its own console port, so several can run on one computer."""
+    taken = set()
+    for path in CONFIG_DIR.glob("*.json"):
+        try:
+            taken.add(json.loads(path.read_text())["port"])
+        except (ValueError, KeyError):
+            pass
+    return next(port for port in range(5554, 5682, 2) if port not in taken)
+
+
+class Emulator:
+    def __init__(self, config):
+        self.config = config
+        self.serial = f"emulator-{config['port']}"
+        self.adb_path = sdk_tool("platform-tools", "adb")
+
+    def adb(self, *args, timeout=30, check=False):
+        try:
+            result = subprocess.run([self.adb_path, "-s", self.serial, *args],
+                                    capture_output=True, text=True, timeout=timeout)
+        except subprocess.TimeoutExpired:
+            if check:
+                raise RuntimeError(f"adb {' '.join(args)} timed out")
+            return None
+        if check and result.returncode != 0:
+            raise RuntimeError(f"adb {' '.join(args)}: {result.stderr.strip() or result.stdout.strip()}")
+        return result.stdout if result.returncode == 0 else None
+
+    def start(self):
+        emulator = sdk_tool("emulator", "emulator")
+        log(f"starting emulator {self.config['avd']} on port {self.config['port']}")
+        # Cold boot every time: a snapshot would bring back an old location.
+        return subprocess.Popen(
+            [emulator, "-avd", self.config["avd"], "-port", str(self.config["port"]), "-no-window",
+             "-no-audio", "-no-snapshot", "-no-boot-anim", "-gpu", "swiftshader_indirect"],
+            stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
+
+    def uptime_s(self):
+        output = self.adb("shell", "cat", "/proc/uptime", timeout=5)
+        try:
+            return float(output.split()[0])
+        except (AttributeError, IndexError, ValueError):
+            return None
+
+    def boot_id(self):
+        output = self.adb("shell", "cat", "/proc/sys/kernel/random/boot_id", timeout=5)
+        return output.strip() if output else None
+
+    def booted(self):
+        return (self.adb("shell", "getprop", "sys.boot_completed", timeout=5) or "").strip() == "1"
+
+    def geo_fix(self):
+        # The console wants longitude first.
+        self.adb("emu", "geo", "fix", str(self.config["lon"]), str(self.config["lat"]), timeout=5)
+
+    def aea_registered(self):
+        """Play Services' earthquake code asks for location under this name once it is alive.
+        Without it the emulator looks healthy and can never get an alert."""
+        dump = self.adb("shell", "dumpsys", "activity", "service", "com.google.android.gms", timeout=90)
+        return dump is not None and "earthquake_alerting" in dump
+
+    def provision(self, apk):
+        """Installs the app and its config. Safe to repeat; runs after every boot."""
+        if PACKAGE not in (self.adb("shell", "pm", "list", "packages", PACKAGE) or ""):
+            # -g grants location: without it the GPS keeper cannot hold GPS open, later geo
+            # fixes are ignored and the location ages until AEA stops alerting.
+            self.adb("install", "-r", "-g", str(apk), timeout=120, check=True)
+        dump = self.adb("shell", "dumpsys", "package", PACKAGE) or ""
+        if "android.permission.ACCESS_FINE_LOCATION: granted=true" not in dump:
+            raise RuntimeError("the app has no location permission; reinstall it with -g")
+        if (self.adb("shell", "cmd", "location", "is-location-enabled") or "").strip() != "true":
+            # Only when off: switching it off and on wipes the last location.
+            self.adb("shell", "cmd", "location", "set-location-enabled", "true", check=True)
+        relay_json = relay_config(self.config)
+        for attempt in range(3):
+            self.adb("shell", write_relay_command(relay_json))
+            # Without a sync a stop soon after can lose the file.
+            self.adb("shell", "sync")
+            if self.adb("exec-out", "run-as", PACKAGE, "cat", "files/relay.json") == relay_json:
+                break
+            time.sleep(2)
+        else:
+            raise RuntimeError("relay.json did not read back as written: the receptor would send nothing")
+        # Rebind so the listener reads the config now and not at its next 5 min beat.
+        self.adb("shell", "cmd", "notification", "disallow_listener", LISTENER)
+        self.adb("shell", "cmd", "notification", "allow_listener", LISTENER, check=True)
+
+
+def setup(args):
+    CONFIG_DIR.mkdir(parents=True, exist_ok=True)
+    existing = json.loads(config_path(args.name).read_text()) if config_path(args.name).exists() else {}
+    # A random topic: anyone who knows an ntfy.sh topic name can read it and post to it.
+    notify_url = args.notify_url or existing.get("notify_url") or f"https://ntfy.sh/canarito-{secrets.token_hex(12)}"
+    config = {
+        "name": args.name,
+        "avd": f"canarito-{args.name}",
+        "lat": args.lat,
+        "lon": args.lon,
+        "port": existing.get("port") or free_port(),
+        "notify_url": notify_url,
+        "notify_token": args.notify_token or existing.get("notify_token", ""),
+        "heartbeat_url": args.heartbeat_url or existing.get("heartbeat_url", ""),
+        "language": args.language,
+    }
+    image = system_image(platform.machine())
+    sdkmanager = sdk_tool("cmdline-tools", "latest", "bin", "sdkmanager")
+    image_dir = sdk_root().joinpath(*image.split(";"))
+    missing = [package for package, path in (("platform-tools", sdk_root() / "platform-tools"),
+                                             ("emulator", sdk_root() / "emulator"),
+                                             (image, image_dir)) if not path.exists()]
+    if missing:
+        log(f"installing {', '.join(missing)} (a few GB the first time)")
+        subprocess.run([sdkmanager, *missing], check=True)
+    avd_home = Path(os.environ.get("ANDROID_AVD_HOME", Path.home() / ".android/avd"))
+    if not (avd_home / f"{config['avd']}.avd").exists():
+        avdmanager = sdk_tool("cmdline-tools", "latest", "bin", "avdmanager")
+        subprocess.run([avdmanager, "create", "avd", "--name", config["avd"], "--package", image,
+                        "--device", "pixel_8"], input="no\n", text=True, check=True)
+    config_path(args.name).write_text(json.dumps(config, indent=2) + "\n")
+    config_path(args.name).chmod(0o600)
+    print(f"""
+Receptor "{args.name}" ready at {args.lat}, {args.lon}.
+
+On each phone that should get the alerts:
+  1. Install the ntfy app (App Store or Google Play).
+  2. Subscribe to: {notify_url}
+  3. On iPhone allow notifications; on Android set the topic to "urgent" so it can ring.
+
+Then start it, and leave it running:
+  canarito.py run --name {args.name}
+""")
+
+
+def run(args):
+    config = load_config(args.name)
+    apk = Path(args.apk)
+    if not apk.exists():
+        sys.exit(f"No APK at {apk}. Build it (README.md) or pass --apk.")
+    emulator = Emulator(config)
+    process = None
+    provisioned_boot = None
+    aea_seen = False
+    aea_warned = False
+    aea_checked_at = 0
+    while True:
+        uptime = emulator.uptime_s()
+        if uptime is None and (process is None or process.poll() is not None):
+            process = emulator.start()
+        booting = uptime is None or uptime < BOOT_WINDOW_S
+        if booting:
+            emulator.geo_fix()
+        if uptime is not None and emulator.booted():
+            boot_id = emulator.boot_id()
+            if boot_id and boot_id != provisioned_boot:
+                try:
+                    emulator.provision(apk)
+                    provisioned_boot = boot_id
+                    log("receptor provisioned; listening for alerts")
+                except RuntimeError as error:
+                    log(f"PROVISION FAILED, retrying: {error}")
+            if not aea_seen and time.monotonic() - aea_checked_at > AEA_CHECK_EVERY_S:
+                aea_checked_at = time.monotonic()
+                aea_seen = emulator.aea_registered()
+                if aea_seen:
+                    log("AEA registered: this receptor can get alerts")
+                elif uptime > AEA_GIVE_UP_S and not aea_warned:
+                    aea_warned = True
+                    log(f"AEA NOT REGISTERED after {uptime / 60:.0f} min. Some emulators never do: "
+                        f"delete the AVD {config['avd']} and run setup again.")
+            if uptime > REBOOT_EVERY_S:
+                log("rebooting for a fresh location")
+                emulator.adb("reboot")
+                # Long enough for the guest to drop off adb, so this does not fire twice.
+                time.sleep(IDLE_EVERY_S)
+        time.sleep(FIX_EVERY_S if booting else IDLE_EVERY_S)
+
+
+def test(args):
+    config = load_config(args.name)
+    request = urllib.request.Request(config["notify_url"], method="POST",
+                                     data="Canarito test. If you see this, the phone side works.".encode(),
+                                     headers={"Title": "Canarito test", "Tags": "white_check_mark"})
+    if config.get("notify_token"):
+        request.add_header("Authorization", f"Bearer {config['notify_token']}")
+    with urllib.request.urlopen(request, timeout=10) as response:
+        print(f"ntfy answered {response.status}: check your phone.")
+    emulator = Emulator(config)
+    relay = emulator.adb("exec-out", "run-as", PACKAGE, "cat", "files/relay.json", timeout=10)
+    listeners = emulator.adb("shell", "settings", "get", "secure", "enabled_notification_listeners", timeout=10) or ""
+    uptime = emulator.uptime_s()
+    print(f"emulator {emulator.serial}: {'up %.0f min' % (uptime / 60) if uptime else 'NOT RUNNING'}")
+    print(f"relay.json: {'ok' if relay == relay_config(config) else 'MISSING OR STALE'}")
+    print(f"listener: {'allowed' if PACKAGE in listeners else 'NOT ALLOWED'}")
+    if uptime:
+        print(f"AEA: {'registered' if emulator.aea_registered() else 'NOT REGISTERED (normal up to 60 min after the first boot)'}")
+    print("A real alert can only be tested by a real quake. See README.md, What can go wrong.")
+
+
+def evidence(args):
+    output = Emulator(load_config(args.name)).adb(
+        "exec-out", "run-as", PACKAGE, "cat", "files/notification-evidence.jsonl", timeout=30)
+    if output is None:
+        sys.exit("Could not read the evidence file. Is the emulator running?")
+    sys.stdout.write(output)
+
+
+def main(argv=None):
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    commands = parser.add_subparsers(dest="command", required=True)
+
+    setup_parser = commands.add_parser("setup", help="create or update a receptor")
+    setup_parser.add_argument("--name", default="home")
+    setup_parser.add_argument("--lat", type=float, required=True)
+    setup_parser.add_argument("--lon", type=float, required=True)
+    setup_parser.add_argument("--notify-url", help="ntfy topic URL (default: a new random ntfy.sh topic)")
+    setup_parser.add_argument("--notify-token", help="ntfy access token, for a protected topic")
+    setup_parser.add_argument("--heartbeat-url", help="pinged every 5 min, e.g. a healthchecks.io check")
+    setup_parser.add_argument("--language", choices=("es", "en"), default="es")
+    setup_parser.set_defaults(handler=setup)
+
+    run_parser = commands.add_parser("run", help="start the receptor and keep it alive (foreground)")
+    run_parser.add_argument("--name", default="home")
+    run_parser.add_argument("--apk", default=str(DEFAULT_APK))
+    run_parser.set_defaults(handler=run)
+
+    test_parser = commands.add_parser("test", help="send a test message and check the receptor")
+    test_parser.add_argument("--name", default="home")
+    test_parser.set_defaults(handler=test)
+
+    evidence_parser = commands.add_parser("evidence", help="print everything the receptor captured")
+    evidence_parser.add_argument("--name", default="home")
+    evidence_parser.set_defaults(handler=evidence)
+
+    args = parser.parse_args(argv)
+    if getattr(args, "lat", None) is not None:
+        try:
+            check_coordinates(args.lat, args.lon)
+        except ValueError as error:
+            parser.error(str(error))
+    args.handler(args)
+
+
+if __name__ == "__main__":
+    main()
