@@ -52,5 +52,65 @@ class CanaritoTest(unittest.TestCase):
             self.assertEqual(canarito.free_port(), 5556)
 
 
+class HealthTest(unittest.TestCase):
+    def setUp(self):
+        self.now = 1_000_000.0
+        self.sent = []
+        self.health = canarito.Health({"name": "casa", "avd": "canarito-casa", "language": "es"},
+                                      lambda audience, text, priority: self.sent.append((audience, text)),
+                                      clock=lambda: self.now)
+
+    def test_tells_the_admin_once_when_it_starts_and_once_when_it_ends(self):
+        self.health.problem("emulator_down")
+        self.health.problem("emulator_down")
+        self.health.tick()
+        self.assertEqual([audience for audience, _ in self.sent], ["admin"])
+        self.assertIn("casa", self.sent[0][1])
+        self.health.clear("emulator_down")
+        self.health.clear("emulator_down")
+        self.assertEqual(len(self.sent), 2)
+        self.assertIn("volvió", self.sent[1][1])
+
+    def test_tells_the_family_only_after_an_hour_without_coverage(self):
+        self.health.problem("aea")
+        self.now += canarito.FAMILY_AFTER_S - 1
+        self.health.tick()
+        self.assertNotIn("family", [audience for audience, _ in self.sent])
+        self.now += 2
+        self.health.tick()
+        self.health.tick()
+        family = [text for audience, text in self.sent if audience == "family"]
+        self.assertEqual(len(family), 1)
+        self.assertIn("no tiene cobertura", family[0])
+
+    def test_family_hears_it_is_back_only_when_every_problem_ended(self):
+        self.health.problem("aea")
+        self.health.problem("emulator_down")
+        self.now += canarito.FAMILY_AFTER_S + 1
+        self.health.tick()
+        self.health.clear("aea")
+        self.assertEqual(len([audience for audience, _ in self.sent if audience == "family"]), 1)
+        self.health.clear("emulator_down")
+        self.assertIn("volvió a tener cobertura", self.sent[-1][1])
+        self.assertEqual(self.sent[-1][0], "family")
+
+    def test_a_short_problem_never_reaches_the_family(self):
+        self.health.problem("provision", error="boom")
+        self.health.clear("provision")
+        self.now += canarito.FAMILY_AFTER_S * 2
+        self.health.tick()
+        self.assertEqual([audience for audience, _ in self.sent], ["admin", "admin"])
+
+    def test_every_problem_has_text_in_both_languages(self):
+        for texts in canarito.NOTICES.values():
+            for key in ("emulator_down", "aea", "provision"):
+                self.assertIn(key, texts)
+                self.assertIn(f"{key}_ok", texts)
+        self.assertEqual(canarito.NOTICES["es"].keys(), canarito.NOTICES["en"].keys())
+
+    def test_a_notice_that_cannot_go_out_does_not_stop_the_receptor(self):
+        self.assertFalse(canarito.post_notice("http://127.0.0.1:1/x", "", "hola"))
+
+
 if __name__ == "__main__":
     unittest.main()

@@ -58,8 +58,15 @@ On iPhone, ntfy cannot ring through silent mode or Focus: Apple keeps that for o
 apps. If you want something louder, a siren, a speaker or a light, subscribe it to the same
 link. Anything that can read ntfy can act on the alert.
 
-`python3 canarito.py test --name home` sends a test message to every subscribed device and
-checks the emulator.
+`setup` also prints an admin link, for whoever runs the computer. Canarito uses it on its own:
+when the emulator stops answering, when Google's earthquake service does not start, when the
+app could not be set up, and after the computer slept. It says so again when the problem
+ends. If coverage stays gone for an hour, the alert link gets one message too, so the family
+knows. Never sign in to a Google account in the emulator: the one alert we lost with no
+explanation was on an emulator signed in to a personal account.
+
+`python3 canarito.py test --name home` sends a test message to both links and checks the
+emulator.
 
 <details>
 <summary>More commands and options</summary>
@@ -69,6 +76,7 @@ checks the emulator.
 | `canarito.py evidence --name home` | everything the app saw from Google, and every send, as JSON lines |
 | `setup --name parents --lat … --lon …` | a second place. Each one is a full emulator, about 4 GB of RAM. |
 | `--notify-url` | your own ntfy topic or server |
+| `--admin-url` | your own ntfy topic for the admin link |
 | `--notify-token` | ntfy access token, for a protected topic |
 | `--heartbeat-url` | pinged every 5 minutes, for example by [healthchecks.io](https://healthchecks.io), which tells you when the receptor dies |
 | `--language` | `es` (default) or `en` for the alert text |
@@ -94,12 +102,11 @@ users get the alert before the shaking.
 | Google's terms | The emulator license covers app development only, and Google's data may not be redistributed without permission. Running this is your decision. |
 | Google can stop it | Google's anti-abuse system reads the emulator's sensors. It did not block alerts in our tests, and you will get no notice if that changes. |
 | Old location | On 24-Sep-2026 an emulator with a location about 25 hours old missed an alert. `run` reboots it every 18 hours, which leaves about 10 minutes without coverage each time. |
-| AEA never starts | One in eight of our new emulators never registered. `run` warns after 90 minutes; delete that emulator and run `setup` again. |
-| An unexplained miss | An emulator signed in to a personal Google account missed the early alert that an emulator with no account got. We never found the cause. |
-| The place is fixed | When you travel, you still get alerts for home. |
+| AEA never starts | One in eight of our new emulators never registered. After 90 minutes the admin link tells you; delete that emulator and run `setup` again. |
+| The place is fixed, for now | A receptor covers one place. Receptors that follow a person are being built ([design](docs/next-features-design.md)). |
 | Duplicates | A retry can deliver the same alert twice. We chose twice over never. |
 | Public topics | Anyone who knows an ntfy.sh topic name can read it. `setup` picks a random name, so keep the link private. |
-| Sleep | If the computer sleeps, the receptor stops. Turn sleep off on that machine. |
+| Sleep | If the computer sleeps, the receptor stops. When it wakes, the admin link tells you for how long. Turn sleep off on that machine. |
 
 <details>
 <summary>Details behind each risk</summary>

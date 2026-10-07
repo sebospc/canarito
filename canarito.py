@@ -40,6 +40,38 @@ REBOOT_EVERY_S = 18 * 60 * 60
 # A new emulator took 13 to 60 min before AEA registered, and 1 in 8 never did.
 AEA_CHECK_EVERY_S = 5 * 60
 AEA_GIVE_UP_S = 90 * 60
+EMULATOR_DOWN_AFTER_S = 5 * 60
+# The family hears about a problem only when coverage is gone this long; the admin hears at once.
+FAMILY_AFTER_S = 60 * 60
+# A gap between wall clock and monotonic clock this big means the computer was asleep.
+SLEPT_AFTER_S = 60
+# An emulator that dies at once must not be relaunched in a tight loop.
+RESTART_EVERY_S = 60
+
+NOTICES = {
+    "es": {
+        "emulator_down": "El receptor “{name}” no responde desde las {since}.",
+        "emulator_down_ok": "El receptor “{name}” volvió a responder.",
+        "aea": "El servicio de sismos de Google no arrancó en “{name}” después de 90 minutos. Borra el emulador {avd} y vuelve a correr setup.",
+        "aea_ok": "El servicio de sismos de Google ya arrancó en “{name}”.",
+        "provision": "No se pudo preparar la app en “{name}”: {error}",
+        "provision_ok": "La app en “{name}” quedó lista.",
+        "slept": "El computador estuvo suspendido de {start} a {end}. “{name}” no tuvo cobertura en ese tiempo.",
+        "family_down": "Canarito “{name}” no tiene cobertura desde las {since}. Te avisamos cuando vuelva.",
+        "family_ok": "Canarito “{name}” volvió a tener cobertura.",
+    },
+    "en": {
+        "emulator_down": "Receptor “{name}” has not answered since {since}.",
+        "emulator_down_ok": "Receptor “{name}” is answering again.",
+        "aea": "Google's earthquake service did not start on “{name}” after 90 minutes. Delete the emulator {avd} and run setup again.",
+        "aea_ok": "Google's earthquake service is now running on “{name}”.",
+        "provision": "Could not set up the app on “{name}”: {error}",
+        "provision_ok": "The app on “{name}” is set up.",
+        "slept": "The computer was asleep from {start} to {end}. “{name}” had no coverage then.",
+        "family_down": "Canarito “{name}” has no coverage since {since}. We will tell you when it is back.",
+        "family_ok": "Canarito “{name}” has coverage again.",
+    },
+}
 
 
 def log(message):
@@ -109,6 +141,65 @@ def free_port():
         except (ValueError, KeyError):
             pass
     return next(port for port in range(5554, 5682, 2) if port not in taken)
+
+
+def clock_time(epoch_s):
+    return time.strftime("%H:%M", time.localtime(epoch_s))
+
+
+def post_notice(url, token, body, priority="default"):
+    """Never raises: a notice that cannot go out is logged, and the receptor keeps running."""
+    request = urllib.request.Request(url, method="POST", data=body.encode(),
+                                     headers={"Title": "Canarito", "Priority": priority})
+    if token:
+        request.add_header("Authorization", f"Bearer {token}")
+    try:
+        with urllib.request.urlopen(request, timeout=10):
+            return True
+    except (OSError, ValueError) as error:
+        log(f"NOTICE NOT SENT ({error}): {body}")
+        return False
+
+
+class Health:
+    """What is wrong with one receptor right now. Each problem is told once when it starts and once
+    when it ends: the admin at once, the family only when coverage is gone for FAMILY_AFTER_S."""
+
+    def __init__(self, config, send, clock=time.time):
+        self.config = config
+        self.send = send  # send(audience, text, priority), audience "admin" or "family"
+        self.clock = clock
+        self.problems = {}
+        self.family_told = False
+        self.texts = NOTICES.get(config.get("language"), NOTICES["es"])
+
+    def _text(self, key, **values):
+        return self.texts[key].format(name=self.config["name"], avd=self.config.get("avd", ""), **values)
+
+    def problem(self, key, **values):
+        if key in self.problems:
+            return
+        self.problems[key] = self.clock()
+        self.send("admin", self._text(key, since=clock_time(self.problems[key]), **values), "high")
+
+    def clear(self, key):
+        if self.problems.pop(key, None) is None:
+            return
+        self.send("admin", self._text(f"{key}_ok"), "default")
+        if not self.problems and self.family_told:
+            self.family_told = False
+            self.send("family", self._text("family_ok"), "default")
+
+    def note(self, key, **values):
+        """Something that already ended, such as a sleep: one message, nothing to clear."""
+        self.send("admin", self._text(key, **values), "high")
+
+    def tick(self):
+        if self.problems and not self.family_told:
+            since = min(self.problems.values())
+            if self.clock() - since > FAMILY_AFTER_S:
+                self.family_told = True
+                self.send("family", self._text("family_down", since=clock_time(since)), "high")
 
 
 class Emulator:
@@ -194,6 +285,7 @@ def setup(args):
     existing = json.loads(config_path(args.name).read_text()) if config_path(args.name).exists() else {}
     # A random topic: anyone who knows an ntfy.sh topic name can read it and post to it.
     notify_url = args.notify_url or existing.get("notify_url") or f"https://ntfy.sh/canarito-{secrets.token_hex(12)}"
+    admin_url = args.admin_url or existing.get("admin_url") or f"https://ntfy.sh/canarito-admin-{secrets.token_hex(12)}"
     config = {
         "name": args.name,
         "avd": f"canarito-{args.name}",
@@ -201,6 +293,7 @@ def setup(args):
         "lon": args.lon,
         "port": existing.get("port") or free_port(),
         "notify_url": notify_url,
+        "admin_url": admin_url,
         "notify_token": args.notify_token or existing.get("notify_token", ""),
         "heartbeat_url": args.heartbeat_url or existing.get("heartbeat_url", ""),
         "language": args.language,
@@ -229,6 +322,10 @@ On each device that should get the alerts:
   2. Subscribe to: {notify_url}
   3. Allow notifications. On Android, set the subscription to "urgent" so it can ring.
 
+For you, who runs this computer, also subscribe to:
+  {admin_url}
+It tells you when this receptor stops working and when it is back, and about quakes it missed.
+
 Then start it, and leave it running:
   canarito.py run --name {args.name}
 """)
@@ -239,16 +336,35 @@ def run(args):
     apk = Path(args.apk)
     if not apk.exists():
         sys.exit(f"No APK at {apk}. Build it (README.md) or pass --apk.")
+    links = {"family": config["notify_url"], "admin": config.get("admin_url") or config["notify_url"]}
+    health = Health(config, lambda audience, text, priority: post_notice(
+        links[audience], config.get("notify_token"), text, priority))
     emulator = Emulator(config)
     process = None
     provisioned_boot = None
     aea_seen = False
-    aea_warned = False
     aea_checked_at = 0
+    down_since = None
+    started_at = -RESTART_EVERY_S
+    last_wall, last_mono = time.time(), time.monotonic()
     while True:
+        # Monotonic time stops while the computer sleeps; the wall clock does not.
+        wall, mono = time.time(), time.monotonic()
+        if (wall - last_wall) - (mono - last_mono) > SLEPT_AFTER_S:
+            health.note("slept", start=clock_time(last_wall), end=clock_time(wall))
+        last_wall, last_mono = wall, mono
+
         uptime = emulator.uptime_s()
-        if uptime is None and (process is None or process.poll() is not None):
-            process = emulator.start()
+        if uptime is None:
+            down_since = down_since or mono
+            if mono - down_since > EMULATOR_DOWN_AFTER_S:
+                health.problem("emulator_down")
+            if (process is None or process.poll() is not None) and mono - started_at >= RESTART_EVERY_S:
+                process = emulator.start()
+                started_at = mono
+        else:
+            down_since = None
+            health.clear("emulator_down")
         booting = uptime is None or uptime < BOOT_WINDOW_S
         if booting:
             emulator.geo_fix()
@@ -258,16 +374,19 @@ def run(args):
                 try:
                     emulator.provision(apk)
                     provisioned_boot = boot_id
+                    health.clear("provision")
                     log("receptor provisioned; listening for alerts")
                 except RuntimeError as error:
+                    health.problem("provision", error=error)
                     log(f"PROVISION FAILED, retrying: {error}")
-            if not aea_seen and time.monotonic() - aea_checked_at > AEA_CHECK_EVERY_S:
-                aea_checked_at = time.monotonic()
+            if not aea_seen and mono - aea_checked_at > AEA_CHECK_EVERY_S:
+                aea_checked_at = mono
                 aea_seen = emulator.aea_registered()
                 if aea_seen:
+                    health.clear("aea")
                     log("AEA registered: this receptor can get alerts")
-                elif uptime > AEA_GIVE_UP_S and not aea_warned:
-                    aea_warned = True
+                elif uptime > AEA_GIVE_UP_S:
+                    health.problem("aea")
                     log(f"AEA NOT REGISTERED after {uptime / 60:.0f} min. Some emulators never do: "
                         f"delete the AVD {config['avd']} and run setup again.")
             if uptime > REBOOT_EVERY_S:
@@ -275,6 +394,7 @@ def run(args):
                 emulator.adb("reboot")
                 # Long enough for the guest to drop off adb, so this does not fire twice.
                 time.sleep(IDLE_EVERY_S)
+        health.tick()
         time.sleep(FIX_EVERY_S if booting else IDLE_EVERY_S)
 
 
@@ -287,6 +407,9 @@ def test(args):
         request.add_header("Authorization", f"Bearer {config['notify_token']}")
     with urllib.request.urlopen(request, timeout=10) as response:
         print(f"ntfy answered {response.status}: check your phone.")
+    if config.get("admin_url") and post_notice(config["admin_url"], config.get("notify_token"),
+                                               "Canarito test on the admin link."):
+        print("admin link: test sent.")
     emulator = Emulator(config)
     relay = emulator.adb("exec-out", "run-as", PACKAGE, "cat", "files/relay.json", timeout=10)
     listeners = emulator.adb("shell", "settings", "get", "secure", "enabled_notification_listeners", timeout=10) or ""
@@ -316,6 +439,7 @@ def main(argv=None):
     setup_parser.add_argument("--lat", type=float, required=True)
     setup_parser.add_argument("--lon", type=float, required=True)
     setup_parser.add_argument("--notify-url", help="ntfy topic URL (default: a new random ntfy.sh topic)")
+    setup_parser.add_argument("--admin-url", help="ntfy topic URL for health notices (default: a new random ntfy.sh topic)")
     setup_parser.add_argument("--notify-token", help="ntfy access token, for a protected topic")
     setup_parser.add_argument("--heartbeat-url", help="pinged every 5 min, e.g. a healthchecks.io check")
     setup_parser.add_argument("--language", choices=("es", "en"), default="es")
