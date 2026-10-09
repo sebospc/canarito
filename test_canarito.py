@@ -371,6 +371,20 @@ class FollowingReceptorTest(unittest.TestCase):
         self.assertIn(fifty.process_pattern(), started_as)
         self.assertNotIn(five.process_pattern(), started_as)
 
+    def test_a_receptor_about_to_go_down_wakes_its_sleepers_and_still_sends_until_they_can(self):
+        with tempfile.TemporaryDirectory() as home, mock.patch.object(canarito, "CONFIG_DIR", Path(home)):
+            for name in ("ana", "beto"):
+                Path(home, f"{name}.json").write_text(json.dumps({"name": name, "avd": name, "lat": 6, "lon": -75}))
+            canarito.write_status("ana", covered=True, draining=True)
+            canarito.write_status("beto", covered=False, asleep=True, relay_by="ana", notify_url="https://ntfy.sh/b")
+            self.assertFalse(canarito.home_covered("ana"))
+            self.assertEqual(canarito.fallback_host("beto", (6, -75), "ana"), "ana")
+            self.assertFalse(canarito.safe_to_stop("ana"))
+            canarito.write_status("beto", asleep=False)
+            self.assertFalse(canarito.safe_to_stop("ana"))
+            canarito.write_status("beto", covered=True, relay_by=None)
+            self.assertTrue(canarito.safe_to_stop("ana"))
+
     def test_owntracks_link_carries_the_location_link(self):
         import urllib.parse
         link = canarito.owntracks_link("https://ntfy.sh/canarito-where-x?cache=no", "ana")

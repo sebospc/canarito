@@ -201,6 +201,9 @@ two following receptors):
 - Every morning at 8 the admin link gets one quiet message with each receptor's state. A dead
   computer cannot say it is dead, so this is the alarm: **if the morning message does not
   arrive, Canarito is down.**
+- Before you stop a receptor by hand (an update, a restart), run `canarito.py drain --name <it>`.
+  It wakes those who sleep on it and returns when stopping it leaves nobody uncovered. The
+  18-hour reboot does the same by itself.
 - To hear about it at once instead of the next morning, something outside the computer has to
   watch: `--heartbeat-url` with a check such as healthchecks.io.
 

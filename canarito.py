@@ -417,9 +417,20 @@ def write_status(name, **fields):
     temporary.replace(status_path(name))
 
 
-def home_covered(name):
+def can_relay(name):
     """Every receptor writes whether it can get alerts right now. No file means no."""
     return read_status(name).get("covered") is True
+
+
+def home_covered(name):
+    """Whether someone may sleep on it: it can get alerts and is not about to go down."""
+    status = read_status(name)
+    return status.get("covered") is True and not status.get("draining")
+
+
+def safe_to_stop(name):
+    """Nobody relies on this receptor and every other awake one can get alerts."""
+    return not sleeping_neighbours(name) and others_covered(name)
 
 
 def sleep_hosts(my_name):
@@ -461,7 +472,7 @@ def fallback_host(my_name, my_position, current):
     """While a receptor cannot get alerts (starting, restarting, waiting for Google), another one
     that can sends them to its people. An alert for a place some way off is better than none.
     Keeps the current one while it still can; otherwise the nearest that can."""
-    can = [name for name in receptor_names() if name != my_name and home_covered(name)]
+    can = [name for name in receptor_names() if name != my_name and can_relay(name)]
     if current in can:
         return current
 
@@ -473,7 +484,7 @@ def fallback_host(my_name, my_position, current):
 
 def others_covered(my_name):
     """Every other receptor here can get alerts, so this one may go down for a while."""
-    return all(home_covered(name) for name in receptor_names()
+    return all(can_relay(name) for name in receptor_names()
                if name != my_name and not read_status(name).get("asleep"))
 
 
@@ -854,8 +865,8 @@ def run(args):
     # A host that was sending for this receptor keeps doing so until this one can get alerts.
     relay_by = read_status(config["name"]).get("relay_by")
     # Starts awake and unable to get alerts, whatever an old file says.
-    write_status(config["name"], covered=False, asleep=False, follow=bool(config.get("follow")),
-                 notify_url=config["notify_url"])
+    write_status(config["name"], covered=False, asleep=False, draining=False,
+                 follow=bool(config.get("follow")), notify_url=config["notify_url"])
     last_wall, last_mono = time.time(), time.monotonic()
     while True:
         # Monotonic time stops while the computer sleeps; the wall clock does not.
@@ -945,6 +956,7 @@ def run(args):
                 try:
                     emulator.provision(apk)
                     provisioned_boot = boot_id
+                    write_status(config["name"], draining=False)
                     # A reboot can come back without AEA, so every boot is checked again.
                     aea_seen, aea_checked_at = False, 0
                     health.clear("provision")
@@ -965,8 +977,11 @@ def run(args):
                     # On 9-oct-2026 two receptors stayed unregistered for 10 h after a host restart,
                     # through a M8 quake; a plain restart registered both in 6 min.
                     emulator.stop()
-            # One at a time: the others send this one's alerts while it reboots.
-            if uptime > REBOOT_EVERY_S and others_covered(config["name"]):
+            # One at a time, and only once those sleeping on this one are awake and can get alerts:
+            # draining makes them wake, and this one keeps sending their alerts until they can.
+            if uptime > REBOOT_EVERY_S and not read_status(config["name"]).get("draining"):
+                write_status(config["name"], draining=True)
+            if uptime > REBOOT_EVERY_S and safe_to_stop(config["name"]):
                 log("rebooting for a fresh location")
                 emulator.adb("reboot")
                 # Long enough for the guest to drop off adb, so this does not fire twice.
@@ -1019,6 +1034,17 @@ def evidence(args):
     sys.stdout.write(output)
 
 
+def drain(args):
+    """Before stopping a receptor by hand (an update, a restart): wakes those who sleep on it and
+    waits until stopping it leaves nobody without coverage. The receptor clears it when it starts."""
+    load_config(args.name)
+    write_status(args.name, draining=True)
+    while not safe_to_stop(args.name):
+        print("waiting: others are still starting or rely on it", flush=True)
+        time.sleep(IDLE_EVERY_S)
+    print(f"Safe to stop {args.name} now.")
+
+
 def remove(args):
     """Deletes a receptor: its emulator and every file Canarito keeps for it."""
     config = load_config(args.name)
@@ -1059,6 +1085,10 @@ def main(argv=None):
     evidence_parser = commands.add_parser("evidence", help="print everything the receptor captured")
     evidence_parser.add_argument("--name", default="home")
     evidence_parser.set_defaults(handler=evidence)
+
+    drain_parser = commands.add_parser("drain", help="wait until a receptor can be stopped without leaving anyone uncovered")
+    drain_parser.add_argument("--name", required=True)
+    drain_parser.set_defaults(handler=drain)
 
     remove_parser = commands.add_parser("remove", help="delete a receptor and its emulator")
     remove_parser.add_argument("--name", required=True)
