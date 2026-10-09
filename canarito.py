@@ -52,6 +52,8 @@ AEA_GIVE_UP_S = 90 * 60
 EMULATOR_DOWN_AFTER_S = 5 * 60
 # The family hears about a problem only when coverage is gone this long; the admin hears at once.
 FAMILY_AFTER_S = 60 * 60
+# The receptor keeps listening at the last known place, so these are not a loss of coverage.
+NOT_COVERAGE_LOSS = {"location_stale", "location_invalid"}
 # A gap between wall clock and monotonic clock this big means the computer was asleep.
 SLEPT_AFTER_S = 60
 # An emulator that dies at once must not be relaunched in a tight loop.
@@ -72,7 +74,7 @@ NOTICES = {
     "es": {
         "emulator_down": "El receptor “{name}” no responde desde las {since}.",
         "emulator_down_ok": "El receptor “{name}” volvió a responder.",
-        "aea": "El servicio de sismos de Google no arrancó en “{name}” después de 90 minutos. Borra el emulador {avd} y vuelve a correr setup.",
+        "aea": "El servicio de sismos de Google no arrancó en “{name}” después de 90 minutos. Canarito reinicia el emulador cada 90 minutos hasta que arranque; si nunca arranca, borra el emulador {avd} y vuelve a correr setup.",
         "aea_ok": "El servicio de sismos de Google ya arrancó en “{name}”.",
         "provision": "No se pudo preparar la app en “{name}”: {error}",
         "provision_ok": "La app en “{name}” quedó lista.",
@@ -221,11 +223,14 @@ class Health:
         self.problems[key] = self.clock()
         self.send("admin", self._text(key, since=clock_time(self.problems[key]), **values), "high")
 
+    def _coverage_lost_since(self):
+        return min((at for key, at in self.problems.items() if key not in NOT_COVERAGE_LOSS), default=None)
+
     def clear(self, key):
         if self.problems.pop(key, None) is None:
             return
         self.send("admin", self._text(f"{key}_ok"), "default")
-        if not self.problems and self.family_told:
+        if self._coverage_lost_since() is None and self.family_told:
             self.family_told = False
             self.send("family", self._text("family_ok"), "default")
 
@@ -234,8 +239,8 @@ class Health:
         self.send("admin", self._text(key, **values), "high")
 
     def tick(self):
-        if self.problems and not self.family_told:
-            since = min(self.problems.values())
+        since = self._coverage_lost_since()
+        if since is not None and not self.family_told:
             if self.clock() - since > FAMILY_AFTER_S:
                 self.family_told = True
                 self.send("family", self._text("family_down", since=clock_time(since)), "high")
@@ -318,9 +323,11 @@ class Follower:
     """Decides what a following receptor does. Pure, so it can be tested without an emulator:
     feed it positions, call step() on every loop, act on what it returns."""
 
-    def __init__(self, home_receptors, clock=time.monotonic):
+    def __init__(self, home_receptors, clock=time.monotonic, home_covered=lambda name: True):
         self.home_receptors = home_receptors
         self.clock = clock
+        # Sleeping hands the alerts to the home receptor, so only a home receptor that can get them counts.
+        self.home_covered = home_covered
         self.position = None
         self.applied = None
         self.applied_at = None
@@ -336,7 +343,7 @@ class Follower:
             return None
         km, name = min((catalogs.km_between(*self.position, lat, lon), name)
                        for name, lat, lon in self.home_receptors)
-        return name if km <= HOME_KM else None
+        return name if km <= HOME_KM and self.home_covered(name) else None
 
     def step(self):
         """One of "sleep", "wake", "move" or None."""
@@ -366,6 +373,14 @@ class Follower:
 
 def status_path(name):
     return CONFIG_DIR / f"{name}.status.json"
+
+
+def home_covered(name):
+    """A fixed receptor writes whether it can get alerts right now. No file means no."""
+    try:
+        return json.loads(status_path(name).read_text()).get("covered") is True
+    except (OSError, ValueError, AttributeError):
+        return False
 
 
 def sleeping_neighbours(my_name):
@@ -640,9 +655,10 @@ def run(args):
     except (OSError, ValueError, TypeError):
         reported = {}
     started_at = -RESTART_EVERY_S
+    covered = None
     follower = None
     if config.get("follow"):
-        follower = Follower(fixed_receptors())
+        follower = Follower(fixed_receptors(), home_covered=home_covered)
         positions, invalid = [], []
 
         def on_message(text):
@@ -709,6 +725,12 @@ def run(args):
                 continue
 
         uptime = emulator.uptime_s()
+        if not follower:
+            # Read by following receptors before they sleep near this one.
+            now_covered = uptime is not None and aea_seen and provisioned_boot is not None
+            if now_covered != covered:
+                covered = now_covered
+                status_path(config["name"]).write_text(json.dumps({"covered": covered}))
         if uptime is None:
             down_since = down_since or mono
             if mono - down_since > EMULATOR_DOWN_AFTER_S:
@@ -729,6 +751,8 @@ def run(args):
                 try:
                     emulator.provision(apk)
                     provisioned_boot = boot_id
+                    # A reboot can come back without AEA, so every boot is checked again.
+                    aea_seen, aea_checked_at = False, 0
                     health.clear("provision")
                     log("receptor provisioned; listening for alerts")
                 except RuntimeError as error:
@@ -742,8 +766,11 @@ def run(args):
                     log("AEA registered: this receptor can get alerts")
                 elif uptime > AEA_GIVE_UP_S:
                     health.problem("aea")
-                    log(f"AEA NOT REGISTERED after {uptime / 60:.0f} min. Some emulators never do: "
-                        f"delete the AVD {config['avd']} and run setup again.")
+                    log(f"AEA NOT REGISTERED after {uptime / 60:.0f} min; restarting the emulator. If it never "
+                        f"registers, delete the AVD {config['avd']} and run setup again.")
+                    # On 9-oct-2026 two receptors stayed unregistered for 10 h after a host restart,
+                    # through a M8 quake; a plain restart registered both in 6 min.
+                    emulator.stop()
             if uptime > REBOOT_EVERY_S:
                 log("rebooting for a fresh location")
                 emulator.adb("reboot")

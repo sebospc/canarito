@@ -103,6 +103,18 @@ class HealthTest(unittest.TestCase):
         self.health.tick()
         self.assertEqual([audience for audience, _ in self.sent], ["admin", "admin"])
 
+    def test_a_lost_location_is_not_told_to_the_family_as_no_coverage(self):
+        self.health.problem("location_stale")
+        self.now += canarito.FAMILY_AFTER_S * 5
+        self.health.tick()
+        self.assertEqual([audience for audience, _ in self.sent], ["admin"])
+        self.health.problem("aea")
+        self.now += canarito.FAMILY_AFTER_S + 1
+        self.health.tick()
+        self.health.clear("aea")
+        self.assertEqual([audience for audience, _ in self.sent][-1], "family")
+        self.assertIn("volvió a tener cobertura", self.sent[-1][1])
+
     def test_every_problem_has_text_in_both_languages(self):
         for texts in canarito.NOTICES.values():
             for key in ("emulator_down", "aea", "provision"):
@@ -218,6 +230,31 @@ class FollowingReceptorTest(unittest.TestCase):
         self.follower.update(4.80, -74.07)  # 10 km away
         self.assertEqual(self.follower.step(), "wake")
         self.assertEqual(self.follower.applied, (4.80, -74.07))
+
+    def test_never_sleeps_on_a_home_receptor_that_cannot_get_alerts(self):
+        # 9-oct-2026: a phone slept on "casa" while casa had no AEA, and a M8 quake went unheard.
+        home_ok = {"casa": False}
+        follower = canarito.Follower(self.HOME, clock=lambda: self.now, home_covered=lambda name: home_ok[name])
+        follower.update(4.72, -74.07)
+        follower.step()
+        self.now += canarito.ASLEEP_AFTER_S * 3
+        self.assertNotEqual(follower.step(), "sleep")
+        home_ok["casa"] = True
+        follower.step()
+        self.now += canarito.ASLEEP_AFTER_S
+        self.assertEqual(follower.step(), "sleep")
+        home_ok["casa"] = False
+        self.assertEqual(follower.step(), "wake")
+
+    def test_home_coverage_comes_from_the_fixed_receptor_status_and_missing_means_no(self):
+        with tempfile.TemporaryDirectory() as home, mock.patch.object(canarito, "CONFIG_DIR", Path(home)):
+            self.assertFalse(canarito.home_covered("casa"))
+            Path(home, "casa.status.json").write_text(json.dumps({"covered": True}))
+            self.assertTrue(canarito.home_covered("casa"))
+            Path(home, "casa.status.json").write_text(json.dumps({"covered": False}))
+            self.assertFalse(canarito.home_covered("casa"))
+            Path(home, "casa.status.json").write_text("garbage")
+            self.assertFalse(canarito.home_covered("casa"))
 
     def test_a_short_stop_at_home_does_not_put_it_to_sleep(self):
         self.follower.update(4.71, -74.07)
