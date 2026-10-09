@@ -50,6 +50,9 @@ REBOOT_EVERY_S = 18 * 60 * 60
 AEA_CHECK_EVERY_S = 5 * 60
 AEA_GIVE_UP_S = 90 * 60
 EMULATOR_DOWN_AFTER_S = 5 * 60
+# adb can drop for a moment (its server dies with whichever receptor started it), while the
+# emulator runs on. Only an emulator that stays unreachable this long is killed and started again.
+EMULATOR_HUNG_AFTER_S = 10 * 60
 # The family hears about a problem only when coverage is gone this long; the admin hears at once.
 FAMILY_AFTER_S = 60 * 60
 # The receptor keeps listening at the last known place, so these are not a loss of coverage.
@@ -611,6 +614,17 @@ class Emulator:
              "-no-audio", "-no-snapshot", "-no-boot-anim", "-gpu", "swiftshader_indirect"],
             stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL)
 
+    def process_pattern(self):
+        """Matches this receptor's emulator in the process list, and no other receptor's."""
+        return f"-avd {self.config['avd']} -port {self.config['port']} "
+
+    def process_alive(self):
+        return subprocess.run(["pgrep", "-f", "--", self.process_pattern()],
+                              capture_output=True).returncode == 0
+
+    def kill_process(self):
+        subprocess.run(["pkill", "-f", "--", self.process_pattern()], capture_output=True)
+
     def uptime_s(self):
         output = self.adb("shell", "cat", "/proc/uptime", timeout=5)
         try:
@@ -908,7 +922,14 @@ def run(args):
             down_since = down_since or mono
             if mono - down_since > EMULATOR_DOWN_AFTER_S:
                 health.problem("emulator_down")
-            if (process is None or process.poll() is not None) and mono - started_at >= RESTART_EVERY_S:
+            # 9-oct-2026: restarting one receptor's service took adb down for the others, they started
+            # a second emulator over their running one and lost coverage. A live process is left alone.
+            alive = emulator.process_alive()
+            if alive and mono - down_since > EMULATOR_HUNG_AFTER_S:
+                log("emulator unreachable for 10 min; killing it to start again")
+                emulator.kill_process()
+                alive = False
+            if not alive and (process is None or process.poll() is not None) and mono - started_at >= RESTART_EVERY_S:
                 process = emulator.start()
                 started_at = mono
         else:

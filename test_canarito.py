@@ -363,6 +363,14 @@ class FollowingReceptorTest(unittest.TestCase):
             canarito.write_status("beto", covered=False)
             self.assertFalse(canarito.others_covered("ana"))
 
+    def test_each_emulator_process_is_told_apart_from_the_others(self):
+        with mock.patch.object(canarito, "sdk_tool", return_value="adb"):
+            five = canarito.Emulator({"avd": "canarito-ana", "port": 5554, "lat": 1, "lon": 1})
+            fifty = canarito.Emulator({"avd": "canarito-ana2", "port": 5556, "lat": 1, "lon": 1})
+        started_as = "qemu -avd canarito-ana2 -port 5556 -no-window"
+        self.assertIn(fifty.process_pattern(), started_as)
+        self.assertNotIn(five.process_pattern(), started_as)
+
     def test_owntracks_link_carries_the_location_link(self):
         import urllib.parse
         link = canarito.owntracks_link("https://ntfy.sh/canarito-where-x?cache=no", "ana")
