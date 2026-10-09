@@ -339,6 +339,30 @@ class FollowingReceptorTest(unittest.TestCase):
         self.assertIsNone(follower.step())
         self.assertFalse(follower.asleep)
 
+    def test_a_receptor_that_cannot_get_alerts_falls_back_to_the_nearest_one_that_can(self):
+        with tempfile.TemporaryDirectory() as home, mock.patch.object(canarito, "CONFIG_DIR", Path(home)):
+            for name, lat in (("ana", 4.60), ("beto", 4.71), ("carla", 6.25)):
+                Path(home, f"{name}.json").write_text(json.dumps({"name": name, "avd": name, "lat": lat, "lon": -74.1}))
+            canarito.write_status("ana", covered=False)
+            canarito.write_status("beto", covered=True)
+            canarito.write_status("carla", covered=True)
+            self.assertEqual(canarito.fallback_host("ana", (4.60, -74.1), None), "carla")
+            self.assertEqual(canarito.fallback_host("ana", (4.60, -74.1), "beto"), "beto")
+            canarito.write_status("carla", covered=False)
+            self.assertEqual(canarito.fallback_host("ana", (4.60, -74.1), "carla"), "beto")
+            canarito.write_status("beto", covered=False)
+            self.assertIsNone(canarito.fallback_host("ana", (4.60, -74.1), "beto"))
+
+    def test_reboots_only_while_every_other_awake_receptor_can_get_alerts(self):
+        with tempfile.TemporaryDirectory() as home, mock.patch.object(canarito, "CONFIG_DIR", Path(home)):
+            for name in ("ana", "beto", "carla"):
+                Path(home, f"{name}.json").write_text(json.dumps({"name": name, "avd": name, "lat": 6, "lon": -75}))
+            canarito.write_status("beto", covered=True)
+            canarito.write_status("carla", covered=False, asleep=True)
+            self.assertTrue(canarito.others_covered("ana"))
+            canarito.write_status("beto", covered=False)
+            self.assertFalse(canarito.others_covered("ana"))
+
     def test_owntracks_link_carries_the_location_link(self):
         import urllib.parse
         link = canarito.owntracks_link("https://ntfy.sh/canarito-where-x?cache=no", "ana")

@@ -443,6 +443,37 @@ def sleeping_neighbours(my_name):
     return sorted(links)
 
 
+def receptor_position(name):
+    status = read_status(name)
+    if status.get("position"):
+        return tuple(status["position"])
+    try:
+        config = json.loads(config_path(name).read_text())
+        return config["lat"], config["lon"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
+def fallback_host(my_name, my_position, current):
+    """While a receptor cannot get alerts (starting, restarting, waiting for Google), another one
+    that can sends them to its people. An alert for a place some way off is better than none.
+    Keeps the current one while it still can; otherwise the nearest that can."""
+    can = [name for name in receptor_names() if name != my_name and home_covered(name)]
+    if current in can:
+        return current
+
+    def km(name):
+        position = receptor_position(name)
+        return catalogs.km_between(*my_position, *position) if my_position and position else float("inf")
+    return min(can, key=lambda name: (km(name), name), default=None)
+
+
+def others_covered(my_name):
+    """Every other receptor here can get alerts, so this one may go down for a while."""
+    return all(home_covered(name) for name in receptor_names()
+               if name != my_name and not read_status(name).get("asleep"))
+
+
 def alive_path(name):
     return CONFIG_DIR / f"{name}.alive"
 
@@ -793,8 +824,9 @@ def run(args):
             saved = read_status(config["name"]).get("position")
         except (TypeError, AttributeError):
             saved = None
+        # Until the phone sends a position, the receptor is where setup put it.
+        follower.update(*(saved or (config["lat"], config["lon"])))
         if saved:
-            follower.update(*saved)
             emulator.position = tuple(saved)
         last_position_at = time.time()
         position_seen = False
@@ -866,6 +898,12 @@ def run(args):
             if covered:
                 relay_by = None
             write_status(config["name"], covered=covered, relay_by=relay_by)
+        if not covered:
+            fallback = fallback_host(config["name"], emulator.position, relay_by)
+            if fallback != relay_by:
+                log(f"no coverage here yet; {fallback or 'NO receptor'} sends the alerts meanwhile")
+                relay_by = fallback
+                write_status(config["name"], relay_by=relay_by)
         if uptime is None:
             down_since = down_since or mono
             if mono - down_since > EMULATOR_DOWN_AFTER_S:
@@ -906,7 +944,8 @@ def run(args):
                     # On 9-oct-2026 two receptors stayed unregistered for 10 h after a host restart,
                     # through a M8 quake; a plain restart registered both in 6 min.
                     emulator.stop()
-            if uptime > REBOOT_EVERY_S:
+            # One at a time: the others send this one's alerts while it reboots.
+            if uptime > REBOOT_EVERY_S and others_covered(config["name"]):
                 log("rebooting for a fresh location")
                 emulator.adb("reboot")
                 # Long enough for the guest to drop off adb, so this does not fire twice.
