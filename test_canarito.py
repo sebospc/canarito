@@ -4,6 +4,7 @@ import hashlib
 import json
 import os
 import tempfile
+import time
 import unittest
 from pathlib import Path
 from unittest import mock
@@ -114,6 +115,40 @@ class HealthTest(unittest.TestCase):
         self.health.clear("aea")
         self.assertEqual([audience for audience, _ in self.sent][-1], "family")
         self.assertIn("volvió a tener cobertura", self.sent[-1][1])
+
+    def test_says_when_it_was_off_and_tells_the_family_only_when_it_was_long(self):
+        canarito.down_notice(self.health, None, self.now, None)
+        canarito.down_notice(self.health, self.now - 60, self.now, None)
+        self.assertEqual(self.sent, [])
+        canarito.down_notice(self.health, self.now - 600, self.now, self.now - 300)
+        self.assertEqual([audience for audience, _ in self.sent], ["admin"])
+        self.assertIn("se reinició", self.sent[0][1])
+        canarito.down_notice(self.health, self.now - canarito.FAMILY_AFTER_S - 1, self.now, None)
+        self.assertEqual([audience for audience, _ in self.sent], ["admin", "admin", "family"])
+        self.assertNotIn("se reinició", self.sent[1][1])
+
+    def test_morning_message_once_a_day_from_one_receptor_with_every_state(self):
+        with tempfile.TemporaryDirectory() as home, mock.patch.object(canarito, "CONFIG_DIR", Path(home)):
+            for name in ("ana", "beto", "carla", "dani"):
+                Path(home, f"{name}.json").write_text(json.dumps({"name": name, "avd": name}))
+                Path(home, f"{name}.alive").write_text(str(self.now))
+            Path(home, "dani.alive").write_text(str(self.now - 3600))
+            canarito.write_status("ana", covered=True)
+            canarito.write_status("beto", covered=False, relay_by="ana")
+            canarito.write_status("carla", covered=False)
+            morning = time.mktime(time.localtime(self.now)[:3] + (9, 0, 0, 0, 0, -1))
+            for path in Path(home).glob("*.alive"):
+                path.write_text(str(morning - (3600 if path.name == "dani.alive" else 0)))
+            canarito.maybe_daily({"name": "beto"}, self.health, morning)
+            self.assertEqual(self.sent, [])
+            canarito.maybe_daily({"name": "ana"}, self.health, morning - 2 * 3600)
+            self.assertEqual(self.sent, [])
+            canarito.maybe_daily({"name": "ana"}, self.health, morning)
+            canarito.maybe_daily({"name": "ana"}, self.health, morning + 60)
+            self.assertEqual(len(self.sent), 1)
+            text = self.sent[0][1]
+            for line in ("ana: cubierto", "beto: cubierto por el receptor de ana", "carla: SIN COBERTURA", "dani: NO RESPONDE"):
+                self.assertIn(line, text)
 
     def test_every_problem_has_text_in_both_languages(self):
         for texts in canarito.NOTICES.values():
@@ -267,9 +302,9 @@ class FollowingReceptorTest(unittest.TestCase):
 
     def test_home_receptor_also_sends_to_people_sleeping_near_it(self):
         with tempfile.TemporaryDirectory() as home, mock.patch.object(canarito, "CONFIG_DIR", Path(home)):
-            Path(home, "ana.status.json").write_text(json.dumps({"asleep": True, "near": "casa", "notify_url": "https://ntfy.sh/ana"}))
-            Path(home, "luis.status.json").write_text(json.dumps({"asleep": False, "near": "casa", "notify_url": "https://ntfy.sh/luis"}))
-            Path(home, "eva.status.json").write_text(json.dumps({"asleep": True, "near": "finca", "notify_url": "https://ntfy.sh/eva"}))
+            Path(home, "ana.status.json").write_text(json.dumps({"asleep": True, "relay_by": "casa", "notify_url": "https://ntfy.sh/ana"}))
+            Path(home, "luis.status.json").write_text(json.dumps({"asleep": False, "relay_by": None, "notify_url": "https://ntfy.sh/luis"}))
+            Path(home, "eva.status.json").write_text(json.dumps({"asleep": True, "relay_by": "finca", "notify_url": "https://ntfy.sh/eva"}))
             self.assertEqual(canarito.sleeping_neighbours("casa"), ["https://ntfy.sh/ana"])
             Path(home, "casa.json").write_text(json.dumps({"name": "casa", "avd": "a", "lat": 4.7, "lon": -74.1, "port": 5554}))
             Path(home, "ana.json").write_text(json.dumps({"name": "ana", "avd": "b", "lat": 4.7, "lon": -74.1, "port": 5556, "follow": True}))
@@ -278,6 +313,31 @@ class FollowingReceptorTest(unittest.TestCase):
         relay = json.loads(canarito.relay_config(CONFIG, ["https://ntfy.sh/b", "https://ntfy.sh/a"]))
         self.assertEqual(relay["extra_urls"], ["https://ntfy.sh/a", "https://ntfy.sh/b"])
         self.assertNotIn("extra_urls", json.loads(canarito.relay_config(CONFIG)))
+
+    def test_a_just_woken_receptor_is_still_sent_alerts_until_it_can_get_them(self):
+        with tempfile.TemporaryDirectory() as home, mock.patch.object(canarito, "CONFIG_DIR", Path(home)):
+            canarito.write_status("sebastian", asleep=False, covered=False, relay_by="novia",
+                                  notify_url="https://ntfy.sh/s")
+            self.assertEqual(canarito.sleeping_neighbours("novia"), ["https://ntfy.sh/s"])
+            canarito.write_status("sebastian", covered=True, relay_by=None)
+            self.assertEqual(canarito.sleeping_neighbours("novia"), [])
+            self.assertEqual(canarito.read_status("sebastian")["notify_url"], "https://ntfy.sh/s")
+
+    def test_people_sleep_only_on_awake_receptors_of_names_before_theirs(self):
+        with tempfile.TemporaryDirectory() as home, mock.patch.object(canarito, "CONFIG_DIR", Path(home)):
+            canarito.write_status("ana", follow=True, asleep=False, position=[4.60, -74.08])
+            canarito.write_status("beto", follow=True, asleep=True, position=[4.60, -74.08])
+            canarito.write_status("zoe", follow=True, asleep=False, position=[4.60, -74.08])
+            self.assertEqual(canarito.sleep_hosts("carla"), [("ana", 4.60, -74.08)])
+            self.assertEqual(canarito.sleep_hosts("ana"), [])
+
+    def test_a_receptor_someone_sleeps_on_stays_awake(self):
+        follower = canarito.Follower(self.HOME, clock=lambda: self.now, can_sleep=lambda: False)
+        follower.update(4.72, -74.07)
+        follower.step()
+        self.now += canarito.ASLEEP_AFTER_S * 3
+        self.assertIsNone(follower.step())
+        self.assertFalse(follower.asleep)
 
     def test_owntracks_link_carries_the_location_link(self):
         import urllib.parse

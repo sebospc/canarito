@@ -116,9 +116,13 @@ message Canarito sends her. OwnTracks then posts her position to a private locat
 Canarito moves her receptor there after each move of more than 1 km, at most every 5 minutes.
 Google itself takes a new location no more often than that.
 
-When she has been within 5 km of a fixed receptor for 30 minutes, her receptor sleeps to free
-its memory, and the fixed receptor also sends its alerts to her link. It wakes when she is
-more than 5 km away, at her new place. Positions are rounded to about 1 km. On ntfy.sh they
+When she has been within 5 km of another receptor for 30 minutes, her receptor sleeps to free
+its memory, and that receptor also sends its alerts to her link. The other receptor can be a
+fixed one, or the awake receptor of someone else who follows, so two people together use one
+emulator. She sleeps only on a receptor that has Google's earthquake service running; if that
+one breaks or leaves, hers wakes. While hers is starting again, the other keeps sending her
+alerts, until hers can get them itself. Among people who follow, a name sleeps only on names
+that sort before it, so two people never sleep on each other. Positions are rounded to about 1 km. On ntfy.sh they
 pass through without being stored, but ntfy.sh sees them; `--location-url` points to your own
 ntfy server instead.
 
@@ -163,10 +167,11 @@ welcome.
 
 ### One computer for the family
 
-Each receptor is a full emulator and uses about 4 GB of RAM. One computer can serve a family:
-one fixed receptor for home, and one following receptor for each person who travels. A
-following receptor sleeps while its person is home, so its memory is used only while they are
-away. A 16 GB computer fits home plus two people away at the same time; an 8 GB one fits
+Each receptor is a full emulator and uses about 3.4 GB of RAM (measured). One computer can
+serve a family. If everyone who should get the alerts has OwnTracks, you need no fixed
+receptor: one following receptor per person, and people near each other share one. Add a
+fixed receptor only for a place with people who do not send their location. `remove --name
+<receptor>` deletes one you no longer need. A 16 GB computer fits home plus two people away at the same time; an 8 GB one fits
 home only. `setup` warns when the receptors would need more than 75% of the RAM.
 
 ### On a cloud server
@@ -188,8 +193,16 @@ two following receptors):
 - Three emulators booting at once took 2 vCPU to a load of 11 for about ten minutes. They
   were all registered with Google within 20 minutes.
 
-If the whole server dies, Canarito dies with it and cannot tell you. Use `--heartbeat-url`
-with an outside check such as healthchecks.io.
+### How you know it works
+
+- When a receptor starts after being off (a crash, a reboot, a cloud server taken back), it
+  tells the admin link from when to when it had no coverage, and the family link too if it
+  was more than an hour.
+- Every morning at 8 the admin link gets one quiet message with each receptor's state. A dead
+  computer cannot say it is dead, so this is the alarm: **if the morning message does not
+  arrive, Canarito is down.**
+- To hear about it at once instead of the next morning, something outside the computer has to
+  watch: `--heartbeat-url` with a check such as healthchecks.io.
 
 ## How much warning you get
 

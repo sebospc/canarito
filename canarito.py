@@ -54,6 +54,10 @@ EMULATOR_DOWN_AFTER_S = 5 * 60
 FAMILY_AFTER_S = 60 * 60
 # The receptor keeps listening at the last known place, so these are not a loss of coverage.
 NOT_COVERAGE_LOSS = {"location_stale", "location_invalid"}
+# A receptor that last showed life longer ago than this was down: it says so when it starts again.
+DOWN_NOTICE_AFTER_S = 2 * 60
+# A dead computer cannot say it is dead. One quiet message every morning means silence is the alarm.
+DAILY_AT_HOUR = 8
 # A gap between wall clock and monotonic clock this big means the computer was asleep.
 SLEPT_AFTER_S = 60
 # An emulator that dies at once must not be relaunched in a tight loop.
@@ -88,11 +92,19 @@ NOTICES = {
         "location_stale_ok": "Canarito volvió a saber dónde está “{name}”.",
         "location_invalid": "Llegó una posición que Canarito no entiende para “{name}”: {error}",
         "location_invalid_ok": "Las posiciones de “{name}” vuelven a llegar bien.",
+        "was_down": "Canarito “{name}” estuvo apagado de {start} a {end} y no tuvo cobertura en ese tiempo.{reason}",
+        "reason_reboot": " El computador se reinició.",
+        "family_was_down": "Canarito “{name}” no tuvo cobertura de {start} a {end}. Ya volvió.",
+        "daily": "Canarito funciona. Si alguna mañana no llega este mensaje, Canarito está caído.\n{lines}",
+        "daily_covered": "{name}: cubierto",
+        "daily_relayed": "{name}: cubierto por el receptor de {host}",
+        "daily_uncovered": "{name}: SIN COBERTURA",
+        "daily_silent": "{name}: NO RESPONDE desde las {since}",
     },
     "en": {
         "emulator_down": "Receptor “{name}” has not answered since {since}.",
         "emulator_down_ok": "Receptor “{name}” is answering again.",
-        "aea": "Google's earthquake service did not start on “{name}” after 90 minutes. Delete the emulator {avd} and run setup again.",
+        "aea": "Google's earthquake service did not start on “{name}” after 90 minutes. Canarito restarts the emulator every 90 minutes until it does; if it never does, delete the emulator {avd} and run setup again.",
         "aea_ok": "Google's earthquake service is now running on “{name}”.",
         "provision": "Could not set up the app on “{name}”: {error}",
         "provision_ok": "The app on “{name}” is set up.",
@@ -106,6 +118,14 @@ NOTICES = {
         "location_stale_ok": "Canarito knows where “{name}” is again.",
         "location_invalid": "A position for “{name}” arrived that Canarito does not understand: {error}",
         "location_invalid_ok": "Positions for “{name}” arrive fine again.",
+        "was_down": "Canarito “{name}” was off from {start} to {end} and had no coverage then.{reason}",
+        "reason_reboot": " The computer restarted.",
+        "family_was_down": "Canarito “{name}” had no coverage from {start} to {end}. It is back.",
+        "daily": "Canarito is working. If this message does not arrive some morning, Canarito is down.\n{lines}",
+        "daily_covered": "{name}: covered",
+        "daily_relayed": "{name}: covered by {host}'s receptor",
+        "daily_uncovered": "{name}: NO COVERAGE",
+        "daily_silent": "{name}: NOT ANSWERING since {since}",
     },
 }
 
@@ -234,9 +254,9 @@ class Health:
             self.family_told = False
             self.send("family", self._text("family_ok"), "default")
 
-    def note(self, key, **values):
+    def note(self, key, audience="admin", priority="high", **values):
         """Something that already ended, such as a sleep: one message, nothing to clear."""
-        self.send("admin", self._text(key, **values), "high")
+        self.send(audience, self._text(key, **values), priority)
 
     def tick(self):
         since = self._coverage_lost_since()
@@ -323,9 +343,13 @@ class Follower:
     """Decides what a following receptor does. Pure, so it can be tested without an emulator:
     feed it positions, call step() on every loop, act on what it returns."""
 
-    def __init__(self, home_receptors, clock=time.monotonic, home_covered=lambda name: True):
-        self.home_receptors = home_receptors
+    def __init__(self, home_receptors, clock=time.monotonic, home_covered=lambda name: True,
+                 can_sleep=lambda: True):
+        # A list, or a function for hosts that come and go (other people's awake receptors).
+        self.home_receptors = home_receptors if callable(home_receptors) else (lambda: home_receptors)
         self.clock = clock
+        # Someone who sleeps on this receptor needs it awake.
+        self.can_sleep = can_sleep
         # Sleeping hands the alerts to the home receptor, so only a home receptor that can get them counts.
         self.home_covered = home_covered
         self.position = None
@@ -339,11 +363,9 @@ class Follower:
         self.position = (lat, lon)
 
     def nearest_home(self):
-        if not self.position or not self.home_receptors:
-            return None
-        km, name = min((catalogs.km_between(*self.position, lat, lon), name)
-                       for name, lat, lon in self.home_receptors)
-        return name if km <= HOME_KM and self.home_covered(name) else None
+        hosts = self.home_receptors() if self.position else []
+        near = sorted((catalogs.km_between(*self.position, lat, lon), name) for name, lat, lon in hosts)
+        return next((name for km, name in near if km <= HOME_KM and self.home_covered(name)), None)
 
     def step(self):
         """One of "sleep", "wake", "move" or None."""
@@ -360,7 +382,7 @@ class Follower:
                 self.applied, self.applied_at = self.position, now
                 return "wake"
             return None
-        if near and now - self.near_since >= ASLEEP_AFTER_S:
+        if near and now - self.near_since >= ASLEEP_AFTER_S and self.can_sleep():
             self.asleep = True
             return "sleep"
         if self.applied is None or (
@@ -375,25 +397,121 @@ def status_path(name):
     return CONFIG_DIR / f"{name}.status.json"
 
 
-def home_covered(name):
-    """A fixed receptor writes whether it can get alerts right now. No file means no."""
+def read_status(name):
     try:
-        return json.loads(status_path(name).read_text()).get("covered") is True
-    except (OSError, ValueError, AttributeError):
-        return False
+        status = json.loads(status_path(name).read_text())
+        return status if isinstance(status, dict) else {}
+    except (OSError, ValueError):
+        return {}
+
+
+def write_status(name, **fields):
+    """Each receptor's process owns its file; others only read it. Replaced whole, so a reader
+    never sees half a file."""
+    status = {**read_status(name), **fields}
+    temporary = status_path(name).with_suffix(".tmp")
+    temporary.write_text(json.dumps(status))
+    temporary.replace(status_path(name))
+
+
+def home_covered(name):
+    """Every receptor writes whether it can get alerts right now. No file means no."""
+    return read_status(name).get("covered") is True
+
+
+def sleep_hosts(my_name):
+    """Where a following receptor may sleep: fixed receptors, and the awake receptors of people
+    whose name sorts before it. The order means two people never sleep on each other."""
+    hosts = list(fixed_receptors())
+    for path in sorted(CONFIG_DIR.glob("*.status.json")):
+        name = path.name[:-len(".status.json")]
+        status = read_status(name)
+        position = status.get("position")
+        if name < my_name and status.get("follow") and not status.get("asleep") and position:
+            hosts.append((name, position[0], position[1]))
+    return hosts
 
 
 def sleeping_neighbours(my_name):
-    """Alert links of people whose following receptor sleeps near this fixed receptor."""
+    """Alert links of people whose receptor relies on this one: asleep near it, or just woken
+    and not yet able to get alerts itself."""
     links = []
     for path in CONFIG_DIR.glob("*.status.json"):
-        try:
-            status = json.loads(path.read_text())
-        except (OSError, ValueError):
-            continue
-        if status.get("asleep") and status.get("near") == my_name and status.get("notify_url"):
+        status = read_status(path.name[:-len(".status.json")])
+        if status.get("relay_by") == my_name and status.get("notify_url"):
             links.append(status["notify_url"])
     return sorted(links)
+
+
+def alive_path(name):
+    return CONFIG_DIR / f"{name}.alive"
+
+
+def boot_time():
+    try:
+        with open("/proc/stat") as stat:
+            return next(int(line.split()[1]) for line in stat if line.startswith("btime"))
+    except (OSError, StopIteration, ValueError):
+        return None
+
+
+def down_notice(health, last_alive, now, booted_at):
+    """Tells about the time this receptor was off: the admin always, the family when it was long."""
+    if last_alive is None or now - last_alive <= DOWN_NOTICE_AFTER_S:
+        return
+    reason = health._text("reason_reboot") if booted_at and booted_at > last_alive else ""
+    start, end = clock_time(last_alive), clock_time(now)
+    health.note("was_down", start=start, end=end, reason=reason)
+    if now - last_alive > FAMILY_AFTER_S:
+        health.note("family_was_down", audience="family", start=start, end=end)
+
+
+def daily_lines(texts, names, now):
+    """One line per receptor for the morning message, from the files each receptor keeps."""
+    lines = []
+    for name in names:
+        status = read_status(name)
+        try:
+            alive = float(alive_path(name).read_text())
+        except (OSError, ValueError):
+            alive = 0
+        if now - alive > DOWN_NOTICE_AFTER_S:
+            lines.append(texts["daily_silent"].format(name=name, since=clock_time(alive) if alive else "?"))
+        elif status.get("covered"):
+            lines.append(texts["daily_covered"].format(name=name))
+        elif status.get("relay_by") and home_covered(status["relay_by"]):
+            lines.append(texts["daily_relayed"].format(name=name, host=status["relay_by"]))
+        else:
+            lines.append(texts["daily_uncovered"].format(name=name))
+    return lines
+
+
+def receptor_names():
+    names = []
+    for path in sorted(CONFIG_DIR.glob("*.json")):
+        try:
+            config = json.loads(path.read_text())
+            if isinstance(config, dict) and "avd" in config:
+                names.append(config["name"])
+        except (OSError, ValueError, KeyError):
+            continue
+    return names
+
+
+def maybe_daily(config, health, now):
+    """The receptor whose name sorts first sends the morning message for the whole computer."""
+    names = receptor_names()
+    if not names or names[0] != config["name"] or time.localtime(now).tm_hour < DAILY_AT_HOUR:
+        return
+    sent = CONFIG_DIR / "daily.sent"
+    today = time.strftime("%Y-%m-%d", time.localtime(now))
+    try:
+        if sent.read_text() == today:
+            return
+    except OSError:
+        pass
+    sent.write_text(today)
+    health.note("daily", priority="low", lines="\n".join(daily_lines(health.texts, names, now)))
 
 
 def follow_locations(url, token, on_message):
@@ -658,7 +776,8 @@ def run(args):
     covered = None
     follower = None
     if config.get("follow"):
-        follower = Follower(fixed_receptors(), home_covered=home_covered)
+        follower = Follower(lambda: sleep_hosts(config["name"]), home_covered=home_covered,
+                            can_sleep=lambda: not sleeping_neighbours(config["name"]))
         positions, invalid = [], []
 
         def on_message(text):
@@ -671,8 +790,8 @@ def run(args):
                 positions.append(position)
 
         try:
-            saved = json.loads(status_path(config["name"]).read_text()).get("position")
-        except (OSError, ValueError):
+            saved = read_status(config["name"]).get("position")
+        except (TypeError, AttributeError):
             saved = None
         if saved:
             follower.update(*saved)
@@ -681,6 +800,16 @@ def run(args):
         position_seen = False
         threading.Thread(target=follow_locations, daemon=True,
                          args=(config["location_url"], config.get("notify_token"), on_message)).start()
+    try:
+        last_alive = float(alive_path(config["name"]).read_text())
+    except (OSError, ValueError):
+        last_alive = None
+    down_notice(health, last_alive, time.time(), boot_time())
+    # A host that was sending for this receptor keeps doing so until this one can get alerts.
+    relay_by = read_status(config["name"]).get("relay_by")
+    # Starts awake and unable to get alerts, whatever an old file says.
+    write_status(config["name"], covered=False, asleep=False, follow=bool(config.get("follow")),
+                 notify_url=config["notify_url"])
     last_wall, last_mono = time.time(), time.monotonic()
     while True:
         # Monotonic time stops while the computer sleeps; the wall clock does not.
@@ -688,6 +817,8 @@ def run(args):
         if (wall - last_wall) - (mono - last_mono) > SLEPT_AFTER_S:
             health.note("slept", start=clock_time(last_wall), end=clock_time(wall))
         last_wall, last_mono = wall, mono
+        alive_path(config["name"]).write_text(str(wall))
+        maybe_daily(config, health, wall)
 
         if follower:
             if positions and not position_seen:
@@ -709,14 +840,17 @@ def run(args):
             if action == "move":
                 log(f"moving to {follower.position[0]}, {follower.position[1]}")
             elif action == "sleep":
-                log(f"asleep: {config['name']} is home, near {follower.near}")
+                log(f"asleep: {config['name']} is near {follower.near}, which sends the alerts")
+                relay_by = follower.near
                 emulator.stop()
+                aea_seen = False
+                covered = False
             elif action == "wake":
-                log(f"awake: {config['name']} left home")
+                # relay_by stays: the host keeps sending until this receptor can get alerts itself.
+                log(f"awake: {config['name']} left {relay_by}")
             if action:
-                status_path(config["name"]).write_text(json.dumps({
-                    "asleep": follower.asleep, "near": follower.near, "notify_url": config["notify_url"],
-                    "position": follower.position}))
+                write_status(config["name"], asleep=follower.asleep, relay_by=relay_by,
+                             covered=covered is True, position=follower.position)
             if follower.asleep:
                 down_since = None
                 health.clear("emulator_down")
@@ -725,12 +859,13 @@ def run(args):
                 continue
 
         uptime = emulator.uptime_s()
-        if not follower:
-            # Read by following receptors before they sleep near this one.
-            now_covered = uptime is not None and aea_seen and provisioned_boot is not None
-            if now_covered != covered:
-                covered = now_covered
-                status_path(config["name"]).write_text(json.dumps({"covered": covered}))
+        # Read by following receptors before they sleep on this one.
+        now_covered = uptime is not None and aea_seen and provisioned_boot is not None
+        if now_covered != covered:
+            covered = now_covered
+            if covered:
+                relay_by = None
+            write_status(config["name"], covered=covered, relay_by=relay_by)
         if uptime is None:
             down_since = down_since or mono
             if mono - down_since > EMULATOR_DOWN_AFTER_S:
@@ -776,7 +911,7 @@ def run(args):
                 emulator.adb("reboot")
                 # Long enough for the guest to drop off adb, so this does not fire twice.
                 time.sleep(IDLE_EVERY_S)
-            if not follower and provisioned_boot == boot_id:
+            if provisioned_boot == boot_id:
                 neighbours = sleeping_neighbours(config["name"])
                 if neighbours != emulator.extra_urls:
                     emulator.extra_urls = neighbours
@@ -824,6 +959,16 @@ def evidence(args):
     sys.stdout.write(output)
 
 
+def remove(args):
+    """Deletes a receptor: its emulator and every file Canarito keeps for it."""
+    config = load_config(args.name)
+    avdmanager = sdk_tool("cmdline-tools", "latest", "bin", "avdmanager")
+    subprocess.run([avdmanager, "delete", "avd", "--name", config["avd"]], check=False)
+    for path in (config_path(args.name), status_path(args.name), alive_path(args.name), reported_path(args.name)):
+        path.unlink(missing_ok=True)
+    print(f"Receptor \"{args.name}\" removed. If a service runs it (systemd canarito@{args.name}), disable it.")
+
+
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     commands = parser.add_subparsers(dest="command", required=True)
@@ -854,6 +999,10 @@ def main(argv=None):
     evidence_parser = commands.add_parser("evidence", help="print everything the receptor captured")
     evidence_parser.add_argument("--name", default="home")
     evidence_parser.set_defaults(handler=evidence)
+
+    remove_parser = commands.add_parser("remove", help="delete a receptor and its emulator")
+    remove_parser.add_argument("--name", required=True)
+    remove_parser.set_defaults(handler=remove)
 
     args = parser.parse_args(argv)
     if getattr(args, "lat", None) is not None:
