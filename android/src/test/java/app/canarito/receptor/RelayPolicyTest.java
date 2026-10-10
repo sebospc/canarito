@@ -26,8 +26,8 @@ public class RelayPolicyTest {
 
     @Test
     public void usesOwnWordsFromTheStructuredExtras() {
-        assertEquals("Sismo M4.5 cerca de su zona. Protéjase ahora.", RelayPolicy.bodyFor(4.45852f, "es"));
-        assertEquals("Posible sismo cerca de su zona. Protéjase ahora.", RelayPolicy.bodyFor(null, ""));
+        assertEquals("Sismo M4.5 cerca de tu zona. Protégete ahora.", RelayPolicy.bodyFor(4.45852f, "es"));
+        assertEquals("Posible sismo cerca de tu zona. Protégete ahora.", RelayPolicy.bodyFor(null, ""));
         assertEquals("Earthquake M4.5 near you. Take cover now.", RelayPolicy.bodyFor(4.45852f, "en"));
         assertEquals("Alerta de sismo", RelayPolicy.titleFor(null));
         assertEquals("Earthquake alert", RelayPolicy.titleFor("en"));

@@ -156,10 +156,10 @@ def page(lang, t):
   <div class="trio">
     <div class="phone" role="img" aria-label="{escape(t["phone_alt"])}"><div class="screen"><div class="island"></div>
       <p class="clock">10:24</p>
-      <div class="notif"><span class="ntfy"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="{BELL}" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Alerta de sismo</b>Sismo M4.5 cerca de su zona. Protéjase ahora.</div></div>
+      <div class="notif"><span class="ntfy"><svg viewBox="0 0 40 40" aria-hidden="true"><path d="{BELL}" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg></span><div><b>Alerta de sismo</b>Sismo M4.5 cerca de tu zona. Protégete ahora.</div></div>
     </div></div>
     <div class="laptop" role="img" aria-label="{escape(t["laptop_alt"])}"><div class="lid"><div class="web"><div class="bar"></div>
-      <div class="toast"><b>Alerta de sismo</b>Sismo M4.5 cerca de su zona. Protéjase ahora.<br><span>ntfy.sh · {t["now"]}</span></div></div></div><div class="base"></div></div>
+      <div class="toast"><b>Alerta de sismo</b>Sismo M4.5 cerca de tu zona. Protégete ahora.<br><span>ntfy.sh · {t["now"]}</span></div></div></div><div class="base"></div></div>
     <div class="lamp"><div class="glow"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="{BULB}" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/></svg></div>{escape(t["lamp"])}</div>
   </div>
 </div>
@@ -215,8 +215,115 @@ python3 canarito.py run --name home                               <span class="c
 '''
 
 
+PRIVACY = {
+    "es": {
+        "path": "privacy/index.html", "home": "/", "other": "/en/privacy/", "other_label": "English", "other_lang": "en", "locale": "es_CO",
+        "title": "Privacidad de Canarito", "description": "Qué envía la app de Canarito, a quién y qué se queda en tu iPhone.",
+        "h1": "Privacidad de la app de Canarito", "updated": "Última actualización: 10 de octubre de 2026.",
+        "intro": "Canarito es gratis y de código abierto. No hay empresa detrás, ni cuentas, ni correo. Esta página dice qué envía la app de iPhone, a quién y qué guarda.",
+        "sections": (
+            ("Lo que envía la app", (
+                "A tu servidor, el que vinculaste con el QR: tu posición redondeada a dos decimales (unos 1 km), cuando te mueves más de 1 km y una vez al vincular. Un identificador de push de tu iPhone, sellado para que solo el relé de Canarito lo pueda abrir. Un nombre para el dispositivo, el genérico que iOS da a las apps.",
+                "Al relé de Canarito, cuando vinculas y cada vez que Apple cambia el token de tu iPhone: ese token, para recibir el identificador sellado.",
+            )),
+            ("Lo que no envía", (
+                "Tu posición exacta no sale del iPhone. La app no tiene cuentas, anuncios, análisis ni rastreo, y no usa SDK de terceros. La cámara solo lee el QR para vincular, y no guarda nada.",
+            )),
+            ("Quién es responsable", (
+                "Quien administra tu servidor es responsable de lo que ese servidor guarda y por cuánto tiempo. Pregúntale. Puede ver tu posición redondeada, el nombre del dispositivo y el identificador de push. Canarito no tiene un servidor propio y no recibe tus datos.",
+            )),
+            ("El relé de avisos", (
+                "El aviso va de tu servidor al relé, del relé a Apple y de Apple a tu iPhone. El relé es de código abierto (carpeta relay del repositorio). No guarda tokens, vinculaciones ni avisos, y sus registros solo tienen códigos de estado e identificadores de servidor. Apple procesa los avisos según sus propias políticas.",
+            )),
+            ("Lo que se queda en tu iPhone", (
+                "El servidor vinculado y el nombre de tu receptor, la clave del dispositivo (en el llavero de iOS), la última posición enviada y los identificadores de los últimos 50 avisos, para que un mismo aviso no suene dos veces.",
+            )),
+            ("Cómo borrar tus datos", (
+                "En Ajustes de la app, «Desvincular este iPhone» pide al servidor que borre el dispositivo y borra los datos de la app. Si el servidor no responde, quien lo administra puede quitarlo. Borrar la app quita lo que está en el iPhone.",
+            )),
+            ("Contacto y cambios", (
+                "Escribe en los issues de github.com/sebospc/canarito. Los cambios a esta página quedan en el historial del repositorio.",
+            )),
+        ),
+        "footer_left": "Canarito · código abierto, licencia MIT", "footer_right": "No es un sistema oficial de alertas.",
+    },
+    "en": {
+        "path": "en/privacy/index.html", "home": "/en/", "other": "/privacy/", "other_label": "Español", "other_lang": "es", "locale": "en_US",
+        "title": "Canarito privacy", "description": "What the Canarito app sends, to whom, and what stays on your iPhone.",
+        "h1": "Canarito app privacy", "updated": "Last updated: 10 October 2026.",
+        "intro": "Canarito is free and open source. There is no company behind it, no accounts and no email. This page says what the iPhone app sends, to whom, and what it keeps.",
+        "sections": (
+            ("What the app sends", (
+                "To your server, the one you linked with the QR: your position rounded to two decimals (about 1 km), when you move more than 1 km and once when you link. A push identifier of your iPhone, sealed so only the Canarito relay can open it. A name for the device, the generic one iOS gives apps.",
+                "To the Canarito relay, when you link and each time Apple changes your iPhone's token: that token, to get the sealed identifier back.",
+            )),
+            ("What it does not send", (
+                "Your exact position never leaves the iPhone. The app has no accounts, ads, analytics or tracking, and uses no third-party SDK. The camera only reads the QR to link, and saves nothing.",
+            )),
+            ("Who is responsible", (
+                "Whoever runs your server is responsible for what that server stores and for how long. Ask them. They can see your rounded position, the device name and the push identifier. Canarito has no server of its own and does not receive your data.",
+            )),
+            ("The alert relay", (
+                "The alert goes from your server to the relay, from the relay to Apple, and from Apple to your iPhone. The relay is open source (the relay folder of the repository). It stores no tokens, pairings or alerts, and its logs hold only status codes and server ids. Apple handles alerts under its own policies.",
+            )),
+            ("What stays on your iPhone", (
+                "The linked server and your receptor's name, the device key (in the iOS Keychain), the last position sent, and the ids of the last 50 alerts, so the same alert does not ring twice.",
+            )),
+            ("How to delete your data", (
+                "In the app's Settings, \"Unlink this iPhone\" asks the server to delete the device and clears the app's data. If the server does not answer, whoever runs it can remove it. Deleting the app removes what is on the iPhone.",
+            )),
+            ("Contact and changes", (
+                "Write in the issues of github.com/sebospc/canarito. Changes to this page stay in the repository history.",
+            )),
+        ),
+        "footer_left": "Canarito · open source, MIT license", "footer_right": "Not an official alert system.",
+    },
+}
+
+
+def privacy_page(lang, t):
+    body = "".join(f"<h2>{escape(heading)}</h2>" + "".join(f"<p>{escape(paragraph)}</p>" for paragraph in paragraphs)
+                   for heading, paragraphs in t["sections"])
+    return f'''<!doctype html>
+<html lang="{lang}">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>{escape(t["title"])}</title>
+<meta name="description" content="{escape(t["description"])}">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="alternate" hreflang="{t["other_lang"]}" href="https://canarito.app{t["other"]}">
+<meta property="og:title" content="{escape(t["title"])}">
+<meta property="og:locale" content="{t["locale"]}">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="brand" href="{t["home"]}" aria-label="Canarito"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="{BIRD}" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="wm">Canarito</span></a>
+  <a class="lang" href="{t["other"]}" hreflang="{t["other_lang"]}" lang="{t["other_lang"]}">{t["other_label"]}</a>
+</header>
+<main class="doc">
+  <h1>{escape(t["h1"])}</h1>
+  <p class="updated">{escape(t["updated"])}</p>
+  <p class="lead">{escape(t["intro"])}</p>
+  {body}
+</main>
+<footer><span>{escape(t["footer_left"])}</span><span>{escape(t["footer_right"])}</span></footer>
+</div>
+</body>
+</html>
+'''
+
+
 if __name__ == "__main__":
     for lang, strings in PAGES.items():
         target = PUBLIC / strings["path"]
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(page(lang, strings))
+    for lang, strings in PRIVACY.items():
+        target = PUBLIC / strings["path"]
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_text(privacy_page(lang, strings))

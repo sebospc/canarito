@@ -1,0 +1,57 @@
+{
+  "sourceLanguage": "es",
+  "strings": {
+    "NSLocationWhenInUseUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canarito usa tu ubicación para que tu servidor ponga el receptor de sismos donde estás. Solo envía una posición redondeada a 1 km."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canarito uses your location so your server puts the earthquake receptor where you are. It only sends a position rounded to 1 km."
+          }
+        }
+      }
+    },
+    "NSLocationAlwaysAndWhenInUseUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para mover tu receptor cuando viajas, aunque la app esté cerrada. Solo se envía una posición redondeada a 1 km, cuando te mueves."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To move your receptor when you travel, even with the app closed. Only a position rounded to 1 km is sent, when you move."
+          }
+        }
+      }
+    },
+    "NSCameraUsageDescription": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La cámara lee el código QR que muestra tu servidor para vincular este iPhone."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The camera reads the QR code your server shows to link this iPhone."
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

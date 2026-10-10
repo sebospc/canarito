@@ -6,6 +6,8 @@ place you choose, and forward them through ntfy to any device you subscribe.
     canarito.py run --name home
     canarito.py test --name home
     canarito.py evidence --name home
+    canarito.py serve                       (what the iPhone app talks to)
+    canarito.py pair --name home            (shows a QR that pairs an iPhone)
 
 Needs Python 3.9+ and the Android SDK command line tools (sdkmanager, avdmanager) with
 ANDROID_HOME set; a JDK only if you build the APK yourself, otherwise run downloads it.
@@ -22,11 +24,14 @@ import subprocess
 import sys
 import threading
 import time
+import urllib.error
 import urllib.parse
 import urllib.request
 from pathlib import Path
 
+import appserver
 import catalogs
+import qr
 
 PACKAGE = "app.canarito.receptor"
 LISTENER = f"{PACKAGE}/.CaptureService"
@@ -55,8 +60,9 @@ EMULATOR_DOWN_AFTER_S = 5 * 60
 EMULATOR_HUNG_AFTER_S = 10 * 60
 # The family hears about a problem only when coverage is gone this long; the admin hears at once.
 FAMILY_AFTER_S = 60 * 60
-# The receptor keeps listening at the last known place, so these are not a loss of coverage.
-NOT_COVERAGE_LOSS = {"location_stale", "location_invalid"}
+# The receptor keeps listening at the last known place, and ntfy still works without the app
+# side, so these are not a loss of coverage.
+NOT_COVERAGE_LOSS = {"location_stale", "location_invalid", "relay", "app_server", "app_server_public"}
 # A receptor that last showed life longer ago than this was down: it says so when it starts again.
 DOWN_NOTICE_AFTER_S = 2 * 60
 # A dead computer cannot say it is dead. One quiet message every morning means silence is the alarm.
@@ -103,6 +109,14 @@ NOTICES = {
         "daily_relayed": "{name}: cubierto por el receptor de {host}",
         "daily_uncovered": "{name}: SIN COBERTURA",
         "daily_silent": "{name}: NO RESPONDE desde las {since}",
+        "app_server": "El servidor de la app (canarito.py serve) no responde en este computador: {error}. Los celulares con la app no pueden emparejarse ni enviar su posición. Las alertas por ntfy siguen.",
+        "app_server_ok": "El servidor de la app responde otra vez.",
+        "app_server_public": "El servidor de la app funciona aquí, pero no se alcanza desde {url}: {error}. Los celulares con la app no pueden enviar su posición.",
+        "app_server_public_ok": "El servidor de la app se alcanza otra vez desde fuera.",
+        "relay": "Las alertas a los celulares con la app no están saliendo de “{name}”: {error}. Las alertas por ntfy siguen funcionando.",
+        "relay_ok": "Las alertas a los celulares con la app de “{name}” vuelven a salir.",
+        "device_gone": "El celular “{device}” ya no recibe alertas de “{name}” (borró la app o cambió de servidor). Lo quité de la lista.",
+        "alert_not_pushed": "Una alerta de “{name}” no llegó a {count} celular(es) con la app. {error}",
     },
     "en": {
         "emulator_down": "Receptor “{name}” has not answered since {since}.",
@@ -129,6 +143,14 @@ NOTICES = {
         "daily_relayed": "{name}: covered by {host}'s receptor",
         "daily_uncovered": "{name}: NO COVERAGE",
         "daily_silent": "{name}: NOT ANSWERING since {since}",
+        "app_server": "The app server (canarito.py serve) does not answer on this computer: {error}. Phones with the app cannot pair or send their position. Alerts through ntfy still work.",
+        "app_server_ok": "The app server answers again.",
+        "app_server_public": "The app server works here, but is not reachable from {url}: {error}. Phones with the app cannot send their position.",
+        "app_server_public_ok": "The app server is reachable from outside again.",
+        "relay": "Alerts to phones with the app are not leaving “{name}”: {error}. Alerts through ntfy still work.",
+        "relay_ok": "Alerts to phones with the app from “{name}” are leaving again.",
+        "device_gone": "The phone “{device}” no longer gets alerts from “{name}” (the app was deleted or moved to another server). It was removed from the list.",
+        "alert_not_pushed": "An alert from “{name}” did not reach {count} phone(s) with the app. {error}",
     },
 }
 
@@ -468,6 +490,62 @@ def receptor_position(name):
         return None
 
 
+def app_position_path(name):
+    return CONFIG_DIR / f"{name}.app-position.json"
+
+
+def save_app_position(name, lat, lon):
+    """Where the app intake leaves a phone's position for the receptor process. Replaced whole."""
+    temporary = app_position_path(name).with_suffix(".tmp")
+    temporary.write_text(json.dumps({"lat": lat, "lon": lon, "at": time.time()}))
+    temporary.replace(app_position_path(name))
+
+
+def read_app_position(name):
+    """(lat, lon, at) of the last position the app sent, or None."""
+    try:
+        saved = json.loads(app_position_path(name).read_text())
+        return saved["lat"], saved["lon"], saved["at"]
+    except (OSError, ValueError, KeyError, TypeError):
+        return None
+
+
+def relay_ok_path(name):
+    return CONFIG_DIR / f"{name}.relay-failing"
+
+
+def set_relay_ok(name, ok):
+    """A file that exists while the last push to the relay failed. Not in the status file: alert
+    threads write it while the receptor loop rewrites that one."""
+    if ok:
+        relay_ok_path(name).unlink(missing_ok=True)
+    else:
+        relay_ok_path(name).touch()
+
+
+def receptor_language(name):
+    try:
+        return json.loads(config_path(name).read_text()).get("language", "es")
+    except (OSError, ValueError, AttributeError):
+        return "es"
+
+
+def app_status(name):
+    """What GET /v1/status tells a phone: whether its alerts can arrive right now."""
+    try:
+        config = json.loads(config_path(name).read_text())
+    except (OSError, ValueError):
+        return {"receptor": name, "covered": False, "receptor_up": False, "relay_ok": True, "following": False}
+    status = read_status(name)
+    try:
+        up = time.time() - float(alive_path(name).read_text()) <= DOWN_NOTICE_AFTER_S
+    except (OSError, ValueError):
+        up = False
+    helped = bool(status.get("relay_by")) and home_covered(status["relay_by"])
+    return {"receptor": name, "covered": up and (status.get("covered") is True or helped), "receptor_up": up,
+            "relay_ok": not relay_ok_path(name).exists(), "following": bool(config.get("follow"))}
+
+
 def fallback_host(my_name, my_position, current):
     """While a receptor cannot get alerts (starting, restarting, waiting for Google), another one
     that can sends them to its people. An alert for a place some way off is better than none.
@@ -559,23 +637,30 @@ def maybe_daily(config, health, now):
     health.note("daily", priority="low", lines="\n".join(daily_lines(health.texts, names, now)))
 
 
-def follow_locations(url, token, on_message):
-    """Reads the location link for ever, on its own thread. ntfy streams one JSON line per event;
-    a dropped connection is retried, never fatal."""
-    subscribe = urllib.parse.urlsplit(url)._replace(query="").geturl().rstrip("/") + "/json"
+def follow_topic(url, token, on_event, resume=False):
+    """Reads an ntfy topic for ever, on its own thread. ntfy streams one JSON line per event; a
+    dropped connection is retried, never fatal. With resume, a retry asks for what came after the
+    last event seen, so an alert posted during the gap is not lost."""
+    base = urllib.parse.urlsplit(url)._replace(query="").geturl().rstrip("/") + "/json"
+    last_id = None
     while True:
-        request = urllib.request.Request(subscribe)
+        request = urllib.request.Request(base + (f"?since={last_id}" if resume and last_id else ""))
         if token:
             request.add_header("Authorization", f"Bearer {token}")
         try:
             with urllib.request.urlopen(request, timeout=90) as stream:
                 for line in stream:
                     event = json.loads(line)
-                    if event.get("event") == "message":
-                        on_message(event.get("message", ""))
+                    last_id = event.get("id") or last_id
+                    on_event(event)
         except (OSError, ValueError) as error:
-            log(f"location link: {error}; reconnecting")
+            log(f"{base}: {error}; reconnecting")
         time.sleep(10)
+
+
+def follow_locations(url, token, on_message):
+    """Reads the location link for ever (OwnTracks posts there)."""
+    follow_topic(url, token, lambda event: on_message(event.get("message", "")) if event.get("event") == "message" else None)
 
 
 def owntracks_link(location_url, name):
@@ -811,6 +896,101 @@ def find_apk(path):
         sys.exit(f"Could not download the APK ({error}). Build it yourself (README.md) or pass --apk.")
 
 
+WATCHDOG_EVERY_S = 60
+# One failed check can be a blip; two in a row are a problem.
+WATCHDOG_FAILS = 2
+
+
+def probe_app_server(url, opener=urllib.request.urlopen):
+    """None when a Canarito app server answers at url, else why not. An unauthenticated request
+    must come back 401 bad_key as JSON: a tunnel's own error page, a 502 or another program on the
+    port is not our server."""
+    request = urllib.request.Request(url.rstrip("/") + "/v1/status")
+    try:
+        with opener(request, timeout=5):
+            return "answered without a key"
+    except urllib.error.HTTPError as error:
+        try:
+            if error.code == 401 and json.loads(error.read()).get("error") == "bad_key":
+                return None
+        except (ValueError, AttributeError):
+            pass
+        return f"answered {error.code}, not Canarito"
+    except (OSError, ValueError) as error:
+        return str(error)
+
+
+def watch_app_server(health, devices, opener=urllib.request.urlopen):
+    """One round: checks the local port and the public URL. Silent when the app server was never
+    set up. The public check only runs when the local one passes, so one cause gives one notice."""
+    saved = devices.snapshot()
+    if not saved.get("serve_port"):
+        return
+    local = probe_app_server(f"http://127.0.0.1:{saved['serve_port']}", opener)
+    report(health, "app_server", local)
+    if local is None and saved["server_url"]:
+        report(health, "app_server_public", probe_app_server(saved["server_url"], opener), url=saved["server_url"])
+
+
+def report(health, key, error, **values):
+    if error is None:
+        health.strikes[key] = 0
+        health.clear(key)
+        return
+    health.strikes[key] = health.strikes.get(key, 0) + 1
+    if health.strikes[key] >= WATCHDOG_FAILS:
+        health.problem(key, error=error, **values)
+
+
+def start_watchdog(config, health):
+    """The receptor whose name sorts first watches the app server for the whole computer."""
+    names = receptor_names()
+    if not names or names[0] != config["name"]:
+        return
+    devices = appserver.Devices(CONFIG_DIR)
+    health.strikes = {}
+
+    def loop():
+        while True:
+            try:
+                watch_app_server(health, devices)
+            except Exception as error:  # a broken watchdog must say so, not die quietly
+                log(f"WATCHDOG ERROR: {error!r}")
+            time.sleep(WATCHDOG_EVERY_S)
+    threading.Thread(target=loop, daemon=True).start()
+
+
+def start_alert_forwarding(config, health):
+    """Every alert this receptor posts to its link also goes to the phones with the app, through
+    the relay. Read from the link itself so the Android side stays as it is. The relay and the
+    phones are looked up per alert, so pairing a phone needs no restart."""
+    devices = appserver.Devices(CONFIG_DIR)
+    name = config["name"]
+
+    def forward(event):
+        alert = appserver.alert_from_event(event, name, config["language"], time.time())
+        if not alert:
+            return
+        if time.time() - alert["sent_at"] > appserver.ALERT_TTL_S:
+            log(f"alert {alert['id']} is too old to push; skipped")
+            return
+        threading.Thread(target=appserver.deliver_alert, daemon=True, args=(
+            devices, lambda: appserver.load_relay(CONFIG_DIR), health, name, alert,
+            lambda ok: set_relay_ok(name, ok))).start()
+    threading.Thread(target=follow_topic, daemon=True,
+                     args=(config["notify_url"], config.get("notify_token"), forward, True)).start()
+
+    def check_relay_forever():
+        while True:
+            try:
+                appserver.check_relay(devices, lambda: appserver.load_relay(CONFIG_DIR), health, name,
+                                      lambda ok: set_relay_ok(name, ok))
+            except Exception as error:  # a broken check must say so, not die quietly
+                log(f"RELAY CHECK ERROR: {error!r}")
+            time.sleep(appserver.RELAY_CHECK_EVERY_S)
+    threading.Thread(target=check_relay_forever, daemon=True).start()
+
+
 def run(args):
     config = load_config(args.name)
     apk = find_apk(args.apk)
@@ -818,6 +998,8 @@ def run(args):
     health = Health(config, lambda audience, text, priority: post_notice(
         links[audience], config.get("notify_token"), text, priority))
     emulator = Emulator(config)
+    start_alert_forwarding(config, health)
+    start_watchdog(config, health)
     process = None
     provisioned_boot = None
     aea_seen = False
@@ -853,7 +1035,7 @@ def run(args):
         follower.update(*(saved or (config["lat"], config["lon"])))
         if saved:
             emulator.position = tuple(saved)
-        last_position_at = time.time()
+        last_position_at = last_app_position_at = time.time()
         position_seen = False
         threading.Thread(target=follow_locations, daemon=True,
                          args=(config["location_url"], config.get("notify_token"), on_message)).start()
@@ -878,6 +1060,10 @@ def run(args):
         maybe_daily(config, health, wall)
 
         if follower:
+            from_app = read_app_position(config["name"])
+            if from_app and from_app[2] > last_app_position_at:
+                last_app_position_at = from_app[2]
+                positions.append((round(from_app[0], 2), round(from_app[1], 2)))
             if positions and not position_seen:
                 log("first position from the location link")
                 position_seen = True
@@ -1050,9 +1236,76 @@ def remove(args):
     config = load_config(args.name)
     avdmanager = sdk_tool("cmdline-tools", "latest", "bin", "avdmanager")
     subprocess.run([avdmanager, "delete", "avd", "--name", config["avd"]], check=False)
-    for path in (config_path(args.name), status_path(args.name), alive_path(args.name), reported_path(args.name)):
+    for path in (config_path(args.name), status_path(args.name), alive_path(args.name), reported_path(args.name),
+                 app_position_path(args.name), relay_ok_path(args.name)):
         path.unlink(missing_ok=True)
     print(f"Receptor \"{args.name}\" removed. If a service runs it (systemd canarito@{args.name}), disable it.")
+
+
+def reachable_url(url):
+    """HTTPS, or plain HTTP only for this computer (a simulator): a phone must never send its
+    position or key in the clear over a network."""
+    parts = urllib.parse.urlsplit(url)
+    return parts.scheme == "https" and bool(parts.hostname) or (
+        parts.scheme == "http" and parts.hostname in ("localhost", "127.0.0.1"))
+
+
+def pair(args):
+    """Shows a QR that pairs one iPhone with a receptor. The secret works once, for 10 minutes."""
+    load_config(args.name)
+    devices = appserver.Devices(CONFIG_DIR)
+    if args.demo_off:
+        print(f"Demo mode off: the demo code no longer works, {devices.end_demo()} demo phone(s) removed.")
+        return
+    if args.server_url:
+        if not reachable_url(args.server_url):
+            sys.exit("--server-url must be https:// (http:// only for localhost).")
+        devices.set_server_url(args.server_url)
+    server_url = devices.snapshot()["server_url"]
+    if not server_url:
+        sys.exit("Say where phones reach this server, once: canarito.py pair --name NAME --server-url https://...")
+    relay = appserver.load_relay(CONFIG_DIR)
+    if args.relay_url and (not relay or relay.url != args.relay_url.rstrip("/")):
+        if not reachable_url(args.relay_url):
+            sys.exit("--relay-url must be https:// (http:// only for localhost).")
+        try:
+            relay = appserver.register_relay(CONFIG_DIR, args.relay_url)
+        except appserver.RelayError as error:
+            sys.exit(f"Could not register at the relay: {error}")
+    if not relay:
+        sys.exit("Say which push relay to use, once: canarito.py pair --name NAME --relay-url https://...")
+    url = appserver.pairing_url(server_url, devices.new_pairing(args.name, time.time(), demo=args.demo), relay)
+    modules = qr.encode(url)
+    image = CONFIG_DIR / (f"pair-{args.name}-demo.png" if args.demo else f"pair-{args.name}.png")
+    image.write_bytes(qr.png(modules))
+    image.chmod(0o600)
+    print(qr.terminal(modules))
+    if args.demo:
+        print(f"""
+DEMO CODE for App Review. It works for any number of phones until you run:
+  canarito.py pair --name {args.name} --demo-off
+Phones paired with it get test alerts only, never real ones, and their positions are ignored.
+Use it only on a server with no real people. Keep {image} private: it is the key.
+{url}
+""")
+        return
+    print(f"""
+Open the Canarito app and scan this code. It pairs one phone with "{args.name}" and stops working
+after 10 minutes. Delete {image} when done.
+No camera? Paste this in the app instead:
+{url}
+""")
+
+
+def serve(args):
+    """What the app talks to: pairing, positions, status. Put HTTPS in front of it (a tunnel or a
+    reverse proxy); it listens on this computer only unless told otherwise."""
+    appserver.Devices(CONFIG_DIR).set_serve_port(args.port)
+    server = appserver.make_server(args.bind, args.port, appserver.Devices(CONFIG_DIR),
+                                   lambda: appserver.load_relay(CONFIG_DIR), app_status, receptor_language,
+                                   save_app_position, parse_position)
+    log(f"app server on {args.bind}:{args.port}")
+    server.serve_forever()
 
 
 def main(argv=None):
@@ -1093,6 +1346,20 @@ def main(argv=None):
     remove_parser = commands.add_parser("remove", help="delete a receptor and its emulator")
     remove_parser.add_argument("--name", required=True)
     remove_parser.set_defaults(handler=remove)
+
+    pair_parser = commands.add_parser("pair", help="show a QR that pairs an iPhone with a receptor")
+    pair_parser.add_argument("--name", required=True)
+    pair_parser.add_argument("--server-url", help="https URL phones use to reach this server (kept for next time)")
+    pair_parser.add_argument("--relay-url", help="push relay URL; registers this server there (kept for next time)")
+    pair_parser.add_argument("--demo", action="store_true",
+                             help="App Review: a reusable code whose phones get test alerts only (off by default)")
+    pair_parser.add_argument("--demo-off", action="store_true", help="turn demo mode off and remove its phones")
+    pair_parser.set_defaults(handler=pair)
+
+    serve_parser = commands.add_parser("serve", help="run the server the iPhone app talks to")
+    serve_parser.add_argument("--bind", default="127.0.0.1")
+    serve_parser.add_argument("--port", type=int, default=8787)
+    serve_parser.set_defaults(handler=serve)
 
     args = parser.parse_args(argv)
     if getattr(args, "lat", None) is not None:

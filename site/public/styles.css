@@ -92,3 +92,13 @@ footer{border-top:1px solid var(--line);padding:28px 0 48px;font-size:15px;color
 }
 @keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
 @keyframes drop{from{opacity:0;transform:translateY(-14px)}to{opacity:1;transform:none}}
+
+/* Plain text pages (privacy). */
+.doc{padding:40px 0 72px;max-width:680px}
+.doc h1{font-size:44px;font-weight:800}
+.doc .updated{font-size:15px;color:var(--sub);margin-top:10px}
+.doc .lead{margin-top:18px}
+.doc h2{font-size:26px;font-weight:800;margin-top:44px}
+.doc h2+p{margin-top:12px}
+.doc p+p{margin-top:12px}
+@media (max-width:860px){.doc h1{font-size:34px}.doc h2{font-size:22px}}

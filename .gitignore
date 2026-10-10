@@ -5,3 +5,7 @@ __pycache__/
 .idea/
 *.iml
 .wrangler/
+.build/
+xcuserdata/
+DerivedData/
+.DS_Store

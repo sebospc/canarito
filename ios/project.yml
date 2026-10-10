@@ -1,0 +1,96 @@
+name: Canarito
+options:
+  bundleIdPrefix: app
+  developmentLanguage: es
+  deploymentTarget:
+    iOS: "26.0"
+packages:
+  CanaritoCore:
+    path: CanaritoCore
+settings:
+  base:
+    SWIFT_VERSION: "6.0"
+    SWIFT_EMIT_LOC_STRINGS: YES
+    LOCALIZATION_PREFERS_STRING_CATALOGS: YES
+    MARKETING_VERSION: "0.1"
+    # Raise on every TestFlight upload: App Store Connect refuses a build number it has seen.
+    CURRENT_PROJECT_VERSION: "1"
+    # The one place to change the bundle id. The relay's APNs topic must be the same value.
+    APP_BUNDLE_ID: app.canarito
+    # The owner's Apple team id (App Store Connect, Membership).
+    DEVELOPMENT_TEAM: BGKJDXR2L4
+    CODE_SIGN_STYLE: Automatic
+  configs:
+    Debug:
+      APS_ENVIRONMENT: development
+    Release:
+      APS_ENVIRONMENT: production
+    # Once Apple grants Critical Alerts: set SWIFT_ACTIVE_COMPILATION_CONDITIONS to "$(inherited) CRITICAL_ALERTS"
+    # and add com.apple.developer.usernotifications.critical-alerts to the entitlements.
+targets:
+  Canarito:
+    type: application
+    platform: iOS
+    sources:
+      - Canarito
+    dependencies:
+      - package: CanaritoCore
+        product: CanaritoCore
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID)
+        CODE_SIGN_ENTITLEMENTS: Canarito/Canarito.entitlements
+        INFOPLIST_KEY_CFBundleDisplayName: Canarito
+        ASSETCATALOG_COMPILER_APPICON_NAME: AppIcon
+        INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
+        INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
+        INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        INFOPLIST_KEY_UILaunchScreen_Generation: true
+        INFOPLIST_KEY_UIBackgroundModes: location fetch
+        INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Canarito usa tu ubicación para que tu servidor ponga el receptor de sismos donde estás. Solo envía una posición redondeada a 1 km."
+        INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription: "Para mover tu receptor cuando viajas, aunque la app esté cerrada. Solo se envía una posición redondeada a 1 km, cuando te mueves."
+        INFOPLIST_KEY_NSCameraUsageDescription: "La cámara lee el código QR que muestra tu servidor para vincular este iPhone."
+        GENERATE_INFOPLIST_FILE: true
+      configs:
+        Debug:
+          SWIFT_ACTIVE_COMPILATION_CONDITIONS: "$(inherited) DEBUG"
+    info:
+      path: Canarito/Info.plist
+      properties:
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        BGTaskSchedulerPermittedIdentifiers: [app.canarito.refresh]
+        # Only the system's HTTPS: exempt from the export compliance questions.
+        ITSAppUsesNonExemptEncryption: false
+        # Pairing QR: the iPhone camera opens canarito://pair?... straight into the app.
+        CFBundleURLTypes:
+          - CFBundleURLName: app.canarito.pair
+            CFBundleURLSchemes: [canarito]
+        # Plain HTTP only to localhost: a server on the same Mac in debug builds.
+        NSAppTransportSecurity:
+          NSAllowsLocalNetworking: true
+        # Bricolage Grotesque (SIL OFL 1.1, Canarito/Fonts/OFL.txt): display titles only.
+        UIAppFonts: [BricolageGrotesque-Variable.ttf]
+    entitlements:
+      path: Canarito/Canarito.entitlements
+      properties:
+        aps-environment: $(APS_ENVIRONMENT)
+        com.apple.developer.usernotifications.time-sensitive: true
+  CanaritoUITests:
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - CanaritoUITests
+    dependencies:
+      - target: Canarito
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: $(APP_BUNDLE_ID).uitests
+        GENERATE_INFOPLIST_FILE: true
+schemes:
+  Canarito:
+    build:
+      targets:
+        Canarito: all
+    test:
+      targets: [CanaritoUITests]

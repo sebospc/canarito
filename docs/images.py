@@ -196,8 +196,8 @@ def connect(t):
     out.append('<rect x="846" y="168" width="44" height="44" rx="11" fill="#317F6F"/>' + icon("bell", 848, 170, TEXT))
     out.append(text(904, 186, "Alerta de sismo", 18, TEXT, 700))
     out.append(text(1114, 186, t["now"], 15, SUB, anchor="end"))
-    out.append(text(904, 214, "Sismo M4.5 cerca de su zona.", 17, TEXT))
-    out.append(text(904, 238, "Protéjase ahora.", 17, TEXT))
+    out.append(text(904, 214, "Sismo M4.5 cerca de tu zona.", 17, TEXT))
+    out.append(text(904, 238, "Protégete ahora.", 17, TEXT))
     return svg(1200, 388, "".join(out), t["connect_alt"], shift_up=52)
 
 

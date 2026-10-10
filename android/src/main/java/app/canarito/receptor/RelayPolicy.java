@@ -40,10 +40,10 @@ final class RelayPolicy {
         boolean english = "en".equals(language);
         if (magnitude == null) {
             return english ? "Possible earthquake near you. Take cover now."
-                    : "Posible sismo cerca de su zona. Protéjase ahora.";
+                    : "Posible sismo cerca de tu zona. Protégete ahora.";
         }
         return String.format(Locale.ROOT,
-                english ? "Earthquake M%.1f near you. Take cover now." : "Sismo M%.1f cerca de su zona. Protéjase ahora.",
+                english ? "Earthquake M%.1f near you. Take cover now." : "Sismo M%.1f cerca de tu zona. Protégete ahora.",
                 magnitude);
     }
 

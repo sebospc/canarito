@@ -1,0 +1,1774 @@
+{
+  "sourceLanguage": "es",
+  "strings": {
+    "A tu servidor: tu posición redondeada a 1 km, cuando te mueves, y un identificador de tu iPhone que solo el relé de Canarito puede abrir para enviarte el aviso.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "A tu servidor: tu posición redondeada a 1 km, cuando te mueves, y un identificador de tu iPhone que solo el relé de Canarito puede abrir para enviarte el aviso."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To your server: your position rounded to 1 km, when you move, and an identifier of your iPhone that only the Canarito relay can open to send you the alert."
+          }
+        }
+      }
+    },
+    "Abre Canarito para ver qué pasa con tu servidor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre Canarito para ver qué pasa con tu servidor."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Canarito to see what is going on with your server."
+          }
+        }
+      }
+    },
+    "Abre los ajustes del servidor": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abre los ajustes del servidor"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Opens the server settings"
+          }
+        }
+      }
+    },
+    "Abrir Ajustes": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Abrir Ajustes"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Open Settings"
+          }
+        }
+      }
+    },
+    "Ajustes": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ajustes"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Settings"
+          }
+        }
+      }
+    },
+    "Al relé: el aviso pasa por él hacia Apple. No guarda nada.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Al relé: el aviso pasa por él hacia Apple. No guarda nada."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To the relay: the alert goes through it to Apple. It stores nothing."
+          }
+        }
+      }
+    },
+    "Así sonará un aviso de sismo. Esto es solo una prueba.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Así sonará un aviso de sismo. Esto es solo una prueba."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This is how an earthquake alert will sound. This is only a test."
+          }
+        }
+      }
+    },
+    "Aviso de prueba": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aviso de prueba"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test alert"
+          }
+        }
+      }
+    },
+    "Aviso de sismo": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aviso de sismo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earthquake alert"
+          }
+        }
+      }
+    },
+    "Aviso tardío": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Aviso tardío"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Late alert"
+          }
+        }
+      }
+    },
+    "Avisos activos": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisos activos"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts on"
+          }
+        }
+      }
+    },
+    "Avisos de sismo de tu servidor, en tu iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisos de sismo de tu servidor, en tu iPhone."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Earthquake alerts from your server, on your iPhone."
+          }
+        }
+      }
+    },
+    "Avisos desactivados": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisos desactivados"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts are off"
+          }
+        }
+      }
+    },
+    "Canarito no es un sistema oficial y puede fallar o llegar tarde. Si sientes un sismo, protégete aunque no suene nada.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canarito no es un sistema oficial y puede fallar o llegar tarde. Si sientes un sismo, protégete aunque no suene nada."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canarito is not an official system and can fail or arrive late. If you feel an earthquake, protect yourself even if nothing sounds."
+          }
+        }
+      }
+    },
+    "Canarito no tiene permiso para usar la cámara. Actívalo en Ajustes o pega el enlace.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canarito no tiene permiso para usar la cámara. Actívalo en Ajustes o pega el enlace."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canarito has no permission to use the camera. Turn it on in Settings or paste the link."
+          }
+        }
+      }
+    },
+    "Cancelar": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancelar"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cancel"
+          }
+        }
+      }
+    },
+    "Casa con líneas de movimiento: réplicas": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Casa con líneas de movimiento: réplicas"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "House with motion lines: aftershocks"
+          }
+        }
+      }
+    },
+    "Cerrar": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cerrar"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Close"
+          }
+        }
+      }
+    },
+    "Comprobando": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprobando"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Checking"
+          }
+        }
+      }
+    },
+    "Comprueba tus avisos de sismo": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Comprueba tus avisos de sismo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your earthquake alerts"
+          }
+        }
+      }
+    },
+    "Con un modo de Concentración activo, el aviso puede llegar en silencio.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con un modo de Concentración activo, el aviso puede llegar en silencio."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "With a Focus on, the alert may arrive silently."
+          }
+        }
+      }
+    },
+    "Continuar": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continuar"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Continue"
+          }
+        }
+      }
+    },
+    "Cuando el receptor de tu servidor recibe un aviso de Android Earthquake Alerts, tu iPhone suena.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando el receptor de tu servidor recibe un aviso de Android Earthquake Alerts, tu iPhone suena."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When your server's receptor gets an Android Earthquake Alerts warning, your iPhone sounds."
+          }
+        }
+      }
+    },
+    "Cuando pare el temblor": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cuando pare el temblor"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "When the shaking stops"
+          }
+        }
+      }
+    },
+    "Cómo se usan tus datos": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cómo se usan tus datos"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "How your data is used"
+          }
+        }
+      }
+    },
+    "Dejarás de recibir avisos de este servidor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Dejarás de recibir avisos de este servidor."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You will stop receiving alerts from this server."
+          }
+        }
+      }
+    },
+    "Desvincular": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desvincular"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlink"
+          }
+        }
+      }
+    },
+    "Desvincular de todos modos": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desvincular de todos modos"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlink anyway"
+          }
+        }
+      }
+    },
+    "Desvincular este iPhone": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Desvincular este iPhone"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlink this iPhone"
+          }
+        }
+      }
+    },
+    "El código está incompleto. Genera otro en el servidor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El código está incompleto. Genera otro en el servidor."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The code is incomplete. Make another one on the server."
+          }
+        }
+      }
+    },
+    "El código ya se usó o venció. Genera otro con `canarito.py pair`.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El código ya se usó o venció. Genera otro con `canarito.py pair`."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The code was already used or expired. Make another with `canarito.py pair`."
+          }
+        }
+      }
+    },
+    "El receptor que te cubre está apagado. Avisa a quien administra el servidor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El receptor que te cubre está apagado. Avisa a quien administra el servidor."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The receptor that covers you is off. Tell whoever runs the server."
+          }
+        }
+      }
+    },
+    "El responsable de lo que guarda el servidor es quien lo administra.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El responsable de lo que guarda el servidor es quien lo administra."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Whoever runs the server is responsible for what it stores."
+          }
+        }
+      }
+    },
+    "El servidor rechazó la vinculación (%@).": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El servidor rechazó la vinculación (%@)."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The server refused the link (%@)."
+          }
+        }
+      }
+    },
+    "El sismo ocurrió hace %lld min": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El sismo ocurrió hace %lld min"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The earthquake happened %lld min ago"
+          }
+        }
+      }
+    },
+    "El sismo ocurrió hace %lld s": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "El sismo ocurrió hace %lld s"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The earthquake happened %lld s ago"
+          }
+        }
+      }
+    },
+    "En el computador del servidor ejecuta `canarito.py pair` y escanea el QR que aparece.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "En el computador del servidor ejecuta `canarito.py pair` y escanea el QR que aparece."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "On the server's computer run `canarito.py pair` and scan the QR it shows."
+          }
+        }
+      }
+    },
+    "Entendido": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Entendido"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Got it"
+          }
+        }
+      }
+    },
+    "Enviado. Debería sonar en unos segundos.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviado. Debería sonar en unos segundos."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sent. It should sound in a few seconds."
+          }
+        }
+      }
+    },
+    "Enviar aviso de prueba": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Enviar aviso de prueba"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Send a test alert"
+          }
+        }
+      }
+    },
+    "Ese enlace no es de Canarito.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese enlace no es de Canarito."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That link is not from Canarito."
+          }
+        }
+      }
+    },
+    "Ese servidor no usa una conexión segura (https). No lo vinculamos.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ese servidor no usa una conexión segura (https). No lo vinculamos."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "That server does not use a secure connection (https). We will not link it."
+          }
+        }
+      }
+    },
+    "Espera 10 minutos antes de pedir otra prueba.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Espera 10 minutos antes de pedir otra prueba."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Wait 10 minutes before asking for another test."
+          }
+        }
+      }
+    },
+    "Esta app no es un sistema oficial. Puede fallar o llegar tarde, y no reemplaza las indicaciones de las autoridades.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Esta app no es un sistema oficial. Puede fallar o llegar tarde, y no reemplaza las indicaciones de las autoridades."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This app is not an official system. It can fail or arrive late, and it does not replace the instructions of the authorities."
+          }
+        }
+      }
+    },
+    "Estado": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Estado"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Status"
+          }
+        }
+      }
+    },
+    "Este código es de una versión más nueva. Actualiza la app.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este código es de una versión más nueva. Actualiza la app."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This code is from a newer version. Update the app."
+          }
+        }
+      }
+    },
+    "Este iPhone no pudo registrarse para recibir avisos. Revisa los permisos de notificaciones y tu conexión.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Este iPhone no pudo registrarse para recibir avisos. Revisa los permisos de notificaciones y tu conexión."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "This iPhone could not register to receive alerts. Check notification permissions and your connection."
+          }
+        }
+      }
+    },
+    "Falta tu ubicación": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Falta tu ubicación"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your location is missing"
+          }
+        }
+      }
+    },
+    "Hablando con tu servidor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hablando con tu servidor."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Talking to your server."
+          }
+        }
+      }
+    },
+    "Hace 8 días que Canarito no habla con tu servidor. Abre la app para comprobar que sigues cubierto.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Hace 8 días que Canarito no habla con tu servidor. Abre la app para comprobar que sigues cubierto."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Canarito has not talked to your server for 8 days. Open the app to check that you are still covered."
+          }
+        }
+      }
+    },
+    "Le enviará tu posición redondeada a 1 km cada vez que te muevas. Si no lo reconoces, cancela.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Le enviará tu posición redondeada a 1 km cada vez que te muevas. Si no lo reconoces, cancela."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It will get your position rounded to 1 km each time you move. If you do not recognize it, cancel."
+          }
+        }
+      }
+    },
+    "Listo": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Listo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Done"
+          }
+        }
+      }
+    },
+    "Los avisos pueden no llegar": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los avisos pueden no llegar"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts may not arrive"
+          }
+        }
+      }
+    },
+    "Los avisos pueden no sonar": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Los avisos pueden no sonar"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts may not sound"
+          }
+        }
+      }
+    },
+    "Ningún receptor de tu servidor te cubre ahora. No te llegarán avisos.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ningún receptor de tu servidor te cubre ahora. No te llegarán avisos."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No receptor of your server covers you now. You will not get alerts."
+          }
+        }
+      }
+    },
+    "No hay cámara disponible.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No hay cámara disponible."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No camera available."
+          }
+        }
+      }
+    },
+    "No llegamos a tu servidor": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No llegamos a tu servidor"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We cannot reach your server"
+          }
+        }
+      }
+    },
+    "No llegamos al servidor. Revisa tu conexión y vuelve a intentarlo.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No llegamos al servidor. Revisa tu conexión y vuelve a intentarlo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We could not reach the server. Check your connection and try again."
+          }
+        }
+      }
+    },
+    "No pudimos avisar al servidor": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No pudimos avisar al servidor"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "We could not tell the server"
+          }
+        }
+      }
+    },
+    "No se pudo enviar. Revisa tu servidor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No se pudo enviar. Revisa tu servidor."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It could not be sent. Check your server."
+          }
+        }
+      }
+    },
+    "Ocurrió hace %lld min": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocurrió hace %lld min"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happened %lld min ago"
+          }
+        }
+      }
+    },
+    "Ocurrió hace %lld s": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Ocurrió hace %lld s"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Happened %lld s ago"
+          }
+        }
+      }
+    },
+    "Para que el receptor esté donde estás, Canarito envía a tu servidor tu posición redondeada a 1 km, solo cuando te mueves. Tu posición exacta no sale del iPhone.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para que el receptor esté donde estás, Canarito envía a tu servidor tu posición redondeada a 1 km, solo cuando te mueves. Tu posición exacta no sale del iPhone."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "So the receptor is where you are, Canarito sends your server your position rounded to 1 km, only when you move. Your exact position does not leave the iPhone."
+          }
+        }
+      }
+    },
+    "Permitir ubicación «Siempre»": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permitir ubicación «Siempre»"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow location “Always”"
+          }
+        }
+      }
+    },
+    "Persona acurrucada de lado en el suelo, bajo una mesa firme, con las manos cruzadas detrás de la cabeza": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persona acurrucada de lado en el suelo, bajo una mesa firme, con las manos cruzadas detrás de la cabeza"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person curled up on their side on the floor, under a sturdy table, hands crossed behind the head"
+          }
+        }
+      }
+    },
+    "Persona caminando hacia una puerta; agua, luz y gas cerrados": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persona caminando hacia una puerta; agua, luz y gas cerrados"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person walking to a door; water, power and gas shut off"
+          }
+        }
+      }
+    },
+    "Persona y cruz médica": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Persona y cruz médica"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Person and a medical cross"
+          }
+        }
+      }
+    },
+    "Pide tu ubicación «Siempre»": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Pide tu ubicación «Siempre»"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Asks for your location “Always”"
+          }
+        }
+      }
+    },
+    "Prueba: no hay sismo": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Prueba: no hay sismo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Test: no earthquake"
+          }
+        }
+      }
+    },
+    "Qué se envía": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Qué se envía"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "What is sent"
+          }
+        }
+      }
+    },
+    "Receptor": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receptor"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receptor"
+          }
+        }
+      }
+    },
+    "Receptor: %@": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receptor: %@"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receptor: %@"
+          }
+        }
+      }
+    },
+    "Reintentar": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Reintentar"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Try again"
+          }
+        }
+      }
+    },
+    "Revisa tu conexión y que el servidor esté encendido. Mientras tanto no sabemos si te llegarán avisos.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Revisa tu conexión y que el servidor esté encendido. Mientras tanto no sabemos si te llegarán avisos."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Check your connection and that the server is on. Meanwhile we do not know if alerts will reach you."
+          }
+        }
+      }
+    },
+    "Servidor": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Servidor"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Server"
+          }
+        }
+      }
+    },
+    "Si desvinculas ahora, el servidor seguirá creyendo que este iPhone existe hasta que su administrador lo quite.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si desvinculas ahora, el servidor seguirá creyendo que este iPhone existe hasta que su administrador lo quite."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you unlink now, the server will keep thinking this iPhone exists until its administrator removes it."
+          }
+        }
+      }
+    },
+    "Si viajas, Canarito no lo sabe": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Si viajas, Canarito no lo sabe"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "If you travel, Canarito will not know"
+          }
+        }
+      }
+    },
+    "Sin cobertura": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin cobertura"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Not covered"
+          }
+        }
+      }
+    },
+    "Sin cuentas": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin cuentas"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "No accounts"
+          }
+        }
+      }
+    },
+    "Sin permiso Canarito no puede avisarte.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin permiso Canarito no puede avisarte."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without permission Canarito cannot alert you."
+          }
+        }
+      }
+    },
+    "Sin registro no te llegan avisos. Revisa tu conexión.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin registro no te llegan avisos. Revisa tu conexión."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without registration no alerts reach you. Check your connection."
+          }
+        }
+      }
+    },
+    "Sin ubicación «Siempre», tu servidor sigue la zona donde abriste la app por última vez. Si cambias de ciudad, podrías no recibir los avisos de tu zona.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin ubicación «Siempre», tu servidor sigue la zona donde abriste la app por última vez. Si cambias de ciudad, podrías no recibir los avisos de tu zona."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without location “Always”, your server follows the area where you last opened the app. If you change city, you may miss the alerts for your area."
+          }
+        }
+      }
+    },
+    "Solo hablas con el servidor al que te vincules. Sin registro, sin correo, sin anuncios.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Solo hablas con el servidor al que te vincules. Sin registro, sin correo, sin anuncios."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You only talk to the server you link to. No sign-up, no email, no ads."
+          }
+        }
+      }
+    },
+    "Suena cuando hay un sismo": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Suena cuando hay un sismo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sounds when there is an earthquake"
+          }
+        }
+      }
+    },
+    "Te cubre": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te cubre"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Covered"
+          }
+        }
+      }
+    },
+    "Te cubre el receptor «%@».": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te cubre el receptor «%@»."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receptor “%@” covers you."
+          }
+        }
+      }
+    },
+    "Te llega un aviso de prueba para que escuches cómo suena.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te llega un aviso de prueba para que escuches cómo suena."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "You get a test alert so you can hear how it sounds."
+          }
+        }
+      }
+    },
+    "Tu iPhone aún no está registrado": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu iPhone aún no está registrado"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your iPhone is not registered yet"
+          }
+        }
+      }
+    },
+    "Tu receptor no responde": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu receptor no responde"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your receptor is not answering"
+          }
+        }
+      }
+    },
+    "Tu servidor": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu servidor"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your server"
+          }
+        }
+      }
+    },
+    "Tu servidor la usa, redondeada a 1 km, para poner el receptor donde estás. Sin ella no sabemos si te cubre.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu servidor la usa, redondeada a 1 km, para poner el receptor donde estás. Sin ella no sabemos si te cubre."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your server uses it, rounded to 1 km, to put the receptor where you are. Without it we cannot tell if you are covered."
+          }
+        }
+      }
+    },
+    "Tu servidor no logra enviar avisos a tu iPhone. Avisa a quien lo administra.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu servidor no logra enviar avisos a tu iPhone. Avisa a quien lo administra."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your server cannot send alerts to your iPhone. Tell whoever runs it."
+          }
+        }
+      }
+    },
+    "Tu servidor ya no te conoce": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu servidor ya no te conoce"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your server no longer knows you"
+          }
+        }
+      }
+    },
+    "Tu zona no tiene cobertura": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu zona no tiene cobertura"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your area is not covered"
+          }
+        }
+      }
+    },
+    "Tus avisos de sismo pueden no llegar": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tus avisos de sismo pueden no llegar"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your earthquake alerts may not arrive"
+          }
+        }
+      }
+    },
+    "Usar enlace": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Usar enlace"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Use link"
+          }
+        }
+      }
+    },
+    "Vincula tu iPhone otra vez con un código nuevo.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincula tu iPhone otra vez con un código nuevo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link your iPhone again with a new code."
+          }
+        }
+      }
+    },
+    "Vincula tu servidor": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincula tu servidor"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link your server"
+          }
+        }
+      }
+    },
+    "Vinculando…": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vinculando…"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Linking…"
+          }
+        }
+      }
+    },
+    "Vincular": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link"
+          }
+        }
+      }
+    },
+    "Vincular de nuevo": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Vincular de nuevo"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link again"
+          }
+        }
+      }
+    },
+    "¿Desvincular este iPhone?": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Desvincular este iPhone?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Unlink this iPhone?"
+          }
+        }
+      }
+    },
+    "¿No puedes escanear? Pega el enlace que muestra el servidor.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿No puedes escanear? Pega el enlace que muestra el servidor."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Cannot scan? Paste the link the server shows."
+          }
+        }
+      }
+    },
+    "¿Vincular este iPhone con este servidor?": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "¿Vincular este iPhone con este servidor?"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Link this iPhone to this server?"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

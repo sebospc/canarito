@@ -1,0 +1,202 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Description: Canarito APNs push relay. One Lambda behind a function URL, key in Secrets Manager.
+
+Parameters:
+  Runtime:
+    Type: String
+    Default: nodejs22.x   # APNs needs HTTP/2, built into node:http2
+  Handler:
+    Type: String
+    Default: handler.handler
+    Description: Module.function inside relay/ (canarito-server decides)
+  SecretName:
+    Type: String
+    Default: canarito/apns
+    Description: Created by the owner before deploy, see RUNBOOK.md
+  MaxConcurrency:
+    Type: Number
+    Default: 5
+    Description: >
+      Reserved concurrency, the hard ceiling on parallel pushes. 0 = none. Lambda needs 10
+      unreserved executions left in the account, so on an account with the default limit of 10
+      deploy with 0 and set it after a quota increase.
+  MonthlyBudgetUsd:
+    Type: Number
+    Default: 5
+  BudgetFilter:
+    Type: String
+    Default: tag
+    AllowedValues: [service, tag]
+    Description: >
+      service = count Lambda, Secrets Manager and CloudWatch of the whole account.
+      tag = count only resources tagged project=canarito-relay. Needs the cost-allocation tag
+      key `project` active (RUNBOOK.md).
+
+Conditions:
+  FilterByTag: !Equals [!Ref BudgetFilter, tag]
+  ReserveConcurrency: !Not [!Equals [!Ref MaxConcurrency, 0]]
+
+Resources:
+  LogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: /aws/lambda/canarito-relay
+      RetentionInDays: 7
+      Tags: [{Key: project, Value: canarito-relay}]
+
+  RelayRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: canarito-relay
+      Tags: [{Key: project, Value: canarito-relay}]
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: lambda.amazonaws.com}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: relay
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [logs:CreateLogStream, logs:PutLogEvents]
+                Resource: !Sub "${LogGroup.Arn}:*"
+              - Effect: Allow
+                Action: secretsmanager:GetSecretValue
+                # -* because Secrets Manager appends a random suffix to the ARN
+                Resource: !Sub "arn:${AWS::Partition}:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:${SecretName}-*"
+
+  RelayFunction:
+    Type: AWS::Lambda::Function
+    DependsOn: LogGroup
+    Properties:
+      FunctionName: canarito-relay
+      Runtime: !Ref Runtime
+      Handler: !Ref Handler
+      Architectures: [arm64]
+      MemorySize: 128
+      Timeout: 10
+      ReservedConcurrentExecutions: !If [ReserveConcurrency, !Ref MaxConcurrency, !Ref "AWS::NoValue"]
+      Tags: [{Key: project, Value: canarito-relay}]
+      Role: !GetAtt RelayRole.Arn
+      Environment:
+        Variables:
+          SECRET_ID: !Ref SecretName
+      # Placeholder so the stack is creatable without S3. Inline code lands in index.js, so
+      # handler.handler does not resolve and every call fails loud until deploy step 3.
+      Code:
+        ZipFile: |
+          exports.handler = async () => ({ statusCode: 503, body: "relay code not deployed" });
+
+  UrlConfig:
+    Type: AWS::Lambda::Url
+    Properties:
+      TargetFunctionArn: !GetAtt RelayFunction.Arn
+      AuthType: NONE   # callers are self-hosted servers; the relay checks the per-pairing server key
+
+  # Both permissions are needed for a public function URL (rule since Oct 2025).
+  UrlPermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RelayFunction
+      Action: lambda:InvokeFunctionUrl
+      Principal: "*"
+      FunctionUrlAuthType: NONE
+  UrlInvokePermission:
+    Type: AWS::Lambda::Permission
+    Properties:
+      FunctionName: !Ref RelayFunction
+      Action: lambda:InvokeFunction
+      Principal: "*"
+      InvokedViaFunctionUrl: true
+
+  # Off switch: attached to RelayRole by the budget action. The function then cannot read the
+  # key and answers 5xx, which the servers see as relay down (loud, on purpose).
+  OffSwitchPolicy:
+    Type: AWS::IAM::ManagedPolicy
+    Properties:
+      ManagedPolicyName: canarito-relay-off
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Deny
+            Action: secretsmanager:GetSecretValue
+            Resource: "*"
+
+  BudgetActionRole:
+    Type: AWS::IAM::Role
+    Properties:
+      RoleName: canarito-relay-budget-action
+      AssumeRolePolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: budgets.amazonaws.com}
+            Action: sts:AssumeRole
+      Policies:
+        - PolicyName: attach-off-switch
+          PolicyDocument:
+            Version: "2012-10-17"
+            Statement:
+              - Effect: Allow
+                Action: [iam:AttachRolePolicy, iam:DetachRolePolicy]
+                Resource: !GetAtt RelayRole.Arn
+                Condition:
+                  ArnEquals: {"iam:PolicyARN": !Ref OffSwitchPolicy}
+
+  Budget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: canarito-relay
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit: {Amount: !Ref MonthlyBudgetUsd, Unit: USD}
+        # Scoped so other workloads in a shared account do not count toward the relay's budget
+        CostFilters: !If
+          - FilterByTag
+          - TagKeyValue: ["user:project$canarito-relay"]
+          - Service: ["AWS Lambda", "AWS Secrets Manager", "AmazonCloudWatch"]
+
+  # AWS Budgets actions need a subscriber. A topic with no subscriptions keeps it silent on
+  # purpose: nobody gets emailed, the relay answering 5xx is the signal.
+  BudgetTopic:
+    Type: AWS::SNS::Topic
+    Properties:
+      TopicName: canarito-relay-budget
+      Tags: [{Key: project, Value: canarito-relay}]
+
+  BudgetTopicPolicy:
+    Type: AWS::SNS::TopicPolicy
+    Properties:
+      Topics: [!Ref BudgetTopic]
+      PolicyDocument:
+        Version: "2012-10-17"
+        Statement:
+          - Effect: Allow
+            Principal: {Service: budgets.amazonaws.com}
+            Action: sns:Publish
+            Resource: !Ref BudgetTopic
+
+  BudgetOff:
+    Type: AWS::Budgets::BudgetsAction
+    DependsOn: [Budget, BudgetTopicPolicy]
+    Properties:
+      BudgetName: canarito-relay
+      NotificationType: ACTUAL
+      ActionType: APPLY_IAM_POLICY
+      ActionThreshold: {Type: ABSOLUTE_VALUE, Value: !Ref MonthlyBudgetUsd}
+      ApprovalModel: AUTOMATIC
+      ExecutionRoleArn: !GetAtt BudgetActionRole.Arn
+      Definition:
+        IamActionDefinition:
+          PolicyArn: !Ref OffSwitchPolicy
+          Roles: [!Ref RelayRole]
+      Subscribers:
+        - {Type: SNS, Address: !Ref BudgetTopic}
+
+Outputs:
+  RelayUrl:
+    Value: !GetAtt UrlConfig.FunctionUrl

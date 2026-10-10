@@ -1,0 +1,31 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Privacidad de Canarito</title>
+<meta name="description" content="Qué envía la app de Canarito, a quién y qué se queda en tu iPhone.">
+<meta name="referrer" content="no-referrer">
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<link rel="apple-touch-icon" href="/apple-touch-icon.png">
+<link rel="alternate" hreflang="en" href="https://canarito.app/en/privacy/">
+<meta property="og:title" content="Privacidad de Canarito">
+<meta property="og:locale" content="es_CO">
+<link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+<div class="wrap">
+<header>
+  <a class="brand" href="/" aria-label="Canarito"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M8 64 C27 72 33 40 57 33 C70 29 79 34 84 41 L95 44 L84 49 C80 65 63 75 40 73" fill="none" stroke="currentColor" stroke-width="10" stroke-linecap="round" stroke-linejoin="round"/></svg><span class="wm">Canarito</span></a>
+  <a class="lang" href="/en/privacy/" hreflang="en" lang="en">English</a>
+</header>
+<main class="doc">
+  <h1>Privacidad de la app de Canarito</h1>
+  <p class="updated">Última actualización: 10 de octubre de 2026.</p>
+  <p class="lead">Canarito es gratis y de código abierto. No hay empresa detrás, ni cuentas, ni correo. Esta página dice qué envía la app de iPhone, a quién y qué guarda.</p>
+  <h2>Lo que envía la app</h2><p>A tu servidor, el que vinculaste con el QR: tu posición redondeada a dos decimales (unos 1 km), cuando te mueves más de 1 km y una vez al vincular. Un identificador de push de tu iPhone, sellado para que solo el relé de Canarito lo pueda abrir. Un nombre para el dispositivo, el genérico que iOS da a las apps.</p><p>Al relé de Canarito, cuando vinculas y cada vez que Apple cambia el token de tu iPhone: ese token, para recibir el identificador sellado.</p><h2>Lo que no envía</h2><p>Tu posición exacta no sale del iPhone. La app no tiene cuentas, anuncios, análisis ni rastreo, y no usa SDK de terceros. La cámara solo lee el QR para vincular, y no guarda nada.</p><h2>Quién es responsable</h2><p>Quien administra tu servidor es responsable de lo que ese servidor guarda y por cuánto tiempo. Pregúntale. Puede ver tu posición redondeada, el nombre del dispositivo y el identificador de push. Canarito no tiene un servidor propio y no recibe tus datos.</p><h2>El relé de avisos</h2><p>El aviso va de tu servidor al relé, del relé a Apple y de Apple a tu iPhone. El relé es de código abierto (carpeta relay del repositorio). No guarda tokens, vinculaciones ni avisos, y sus registros solo tienen códigos de estado e identificadores de servidor. Apple procesa los avisos según sus propias políticas.</p><h2>Lo que se queda en tu iPhone</h2><p>El servidor vinculado y el nombre de tu receptor, la clave del dispositivo (en el llavero de iOS), la última posición enviada y los identificadores de los últimos 50 avisos, para que un mismo aviso no suene dos veces.</p><h2>Cómo borrar tus datos</h2><p>En Ajustes de la app, «Desvincular este iPhone» pide al servidor que borre el dispositivo y borra los datos de la app. Si el servidor no responde, quien lo administra puede quitarlo. Borrar la app quita lo que está en el iPhone.</p><h2>Contacto y cambios</h2><p>Escribe en los issues de github.com/sebospc/canarito. Los cambios a esta página quedan en el historial del repositorio.</p>
+</main>
+<footer><span>Canarito · código abierto, licencia MIT</span><span>No es un sistema oficial de alertas.</span></footer>
+</div>
+</body>
+</html>

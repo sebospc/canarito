@@ -1,0 +1,13 @@
+[Unit]
+Description=Canarito app server (pairing, positions, status)
+After=network-online.target
+Wants=network-online.target
+[Service]
+User=canarito
+ExecStart=/usr/bin/python3 /opt/canarito/canarito.py serve --bind 127.0.0.1 --port 8787
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target
