@@ -45,6 +45,7 @@ targets:
         INFOPLIST_KEY_UIApplicationSceneManifest_Generation: true
         INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents: true
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
+        TARGETED_DEVICE_FAMILY: "1"
         INFOPLIST_KEY_UILaunchScreen_Generation: true
         INFOPLIST_KEY_UIBackgroundModes: location fetch
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Canarito usa tu ubicación para que tu servidor ponga el receptor de sismos donde estás. Solo envía una posición redondeada a 1 km."
