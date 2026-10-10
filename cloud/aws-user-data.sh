@@ -42,4 +42,5 @@ WantedBy=multi-user.target
 UNIT
 systemctl daemon-reload
 systemctl enable canarito-adb
+bash /opt/canarito/cloud/install-units.sh
 touch /var/lib/canarito/.bootstrap-done

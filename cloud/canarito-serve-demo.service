@@ -1,0 +1,15 @@
+[Unit]
+Description=Canarito demo app server (App Review), separate from the real one
+After=network-online.target
+Wants=network-online.target
+[Service]
+User=canarito
+# Own config dir: no receptor, no real people, nothing shared with canarito-serve.service.
+Environment=CANARITO_HOME=/var/lib/canarito/.canarito-demo
+ExecStart=/usr/bin/python3 /opt/canarito/canarito.py serve --bind 127.0.0.1 --port 8788
+Restart=always
+RestartSec=5
+NoNewPrivileges=true
+PrivateTmp=true
+[Install]
+WantedBy=multi-user.target
