@@ -16,7 +16,7 @@ final class PairingFlowUITests: XCTestCase {
 
         // A phone that already saw the intro goes straight to pairing; a clean install starts here.
         let next = app.buttons["continue"]
-        if next.waitForExistence(timeout: 5) {
+        if next.waitForExistence(timeout: 20) {
             XCTAssertFalse(springboard.alerts.firstMatch.waitForExistence(timeout: 2), "a permission prompt before the person read why")
             next.tap()
         }
@@ -39,6 +39,19 @@ final class PairingFlowUITests: XCTestCase {
         XCTAssertTrue(state.waitForExistence(timeout: 20) || app.staticTexts["Avisos activos"].waitForExistence(timeout: 5), "home not shown")
         XCTAssertTrue(app.staticTexts["Avisos activos"].waitForExistence(timeout: 10), "not covered after pairing")
         attach(app, "paired-covered")
+    }
+
+    /// P0 of build 3: tapping a push banner crashed the app. A shell loop sends the server's test push
+    /// (`xcrun simctl push`) while this waits on the home screen.
+    func testTappingAPushOpensTheAlertScreen() throws {
+        try testFirstRunToCoveredWithAPastedLink()
+        let app = XCUIApplication()
+        XCUIDevice.shared.press(.home)
+        let banner = XCUIApplication(bundleIdentifier: "com.apple.springboard").otherElements["NotificationShortLookView"].firstMatch
+        XCTAssertTrue(banner.waitForExistence(timeout: 90), "no banner: send the push while this runs")
+        banner.tap()
+        XCTAssertTrue(app.wait(for: .runningForeground, timeout: 10), "app did not come to the foreground (crash?)")
+        XCTAssertTrue(app.buttons["close"].waitForExistence(timeout: 10), "alert screen not shown after the tap")
     }
 
     private func attach(_ app: XCUIApplication, _ name: String) {
@@ -64,6 +77,7 @@ final class AccessibilityAuditUITests: XCTestCase {
     func testTravelWarning() throws { try audit("travel-warning", wait: "travelWarningButton") }
     func testAlert() throws { try audit("alert", wait: "close") }
     func testLateAlert() throws { try audit("alert-late", wait: "lateTag") }
+    func testDrillAlert() throws { try audit("alert-drill", wait: "drillBand") }
     func testTestAlert() throws { try audit("alert-test", wait: "testBand") }
     func testAfter() throws { try audit("after", wait: "afterTitle") }
     func testIntro() throws { try audit("intro", wait: "continue") }

@@ -14,6 +14,7 @@ extension EarthquakeAlert {
                   magnitude: (canarito["magnitude"] as? NSNumber)?.doubleValue,
                   occurredAt: epoch("occurred_at"), sentAt: epoch("sent_at") ?? Date(),
                   isLate: (canarito["late"] as? NSNumber)?.boolValue,
-                  isTest: (canarito["test"] as? NSNumber)?.boolValue ?? false)
+                  isTest: (canarito["test"] as? NSNumber)?.boolValue ?? false,
+                  isDrill: (canarito["drill"] as? NSNumber)?.boolValue ?? false)
     }
 }

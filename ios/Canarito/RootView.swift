@@ -10,7 +10,7 @@ struct RootView: View {
         let state = Samples.state ?? model.state
         Group {
             if case .alert(let alert) = state {
-                AlertView(alert: alert, now: model.now, startsOnAfterScreen: Samples.startsOnAfterScreen, onClose: model.dismissAlert)
+                AlertView(alert: alert, now: model.now, playsSound: !model.alertCameFromTap, startsOnAfterScreen: Samples.startsOnAfterScreen, onClose: model.dismissAlert)
                     .transition(.opacity)
             } else if state == .notSetUp || Samples.showsSetup != nil {
                 if Samples.showsSetup == .pair || (Samples.showsSetup == nil && model.hasSeenIntro) {

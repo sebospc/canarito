@@ -1327,6 +1327,23 @@
         }
       }
     },
+    "Simulacro: no es un sismo real": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Simulacro: no es un sismo real"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Drill: this is not a real earthquake"
+          }
+        }
+      }
+    },
     "Sin cobertura": {
       "extractionState": "manual",
       "localizations": {

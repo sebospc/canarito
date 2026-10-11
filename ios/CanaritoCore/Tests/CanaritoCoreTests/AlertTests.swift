@@ -32,6 +32,16 @@ final class AlertTests: XCTestCase {
         XCTAssertTrue(alert.isTest)
     }
 
+    func testADrillIsMarkedAndKeepsTheFullAlertScreen() throws {
+        let drill = try XCTUnwrap(EarthquakeAlert(userInfo: payload(canarito: ["id": "drill-1", "sent_at": 1_791_650_000, "drill": true])))
+        XCTAssertTrue(drill.isDrill)
+        let screen = AlertScreen(drill, now: sentAt, locale: Locale(identifier: "es"))
+        XCTAssertEqual(screen.kind, .drill)
+        XCTAssertTrue(screen.showsProtectiveLine)
+        XCTAssertTrue(screen.showsAfterSteps)
+        XCTAssertFalse(try XCTUnwrap(EarthquakeAlert(userInfo: payload())).isDrill)
+    }
+
     func testLateIsInferredFromTheOriginTimeWhenTheFlagIsMissing() throws {
         let late = try XCTUnwrap(EarthquakeAlert(userInfo: payload(canarito: ["id": "x", "sent_at": 1_791_650_000, "occurred_at": 1_791_649_900])))
         let onTime = try XCTUnwrap(EarthquakeAlert(userInfo: payload(canarito: ["id": "y", "sent_at": 1_791_650_000, "occurred_at": 1_791_649_990])))

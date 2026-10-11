@@ -50,6 +50,7 @@ final class AppModel {
     private(set) var apnsError: String?
     private(set) var status: StatusOutcome = .unknown
     private(set) var alert: EarthquakeAlert?
+    private(set) var alertCameFromTap = false
     private(set) var now = Date()
     /// Stored, not read from the store on the fly, so the screen changes the moment the intro ends.
     private(set) var hasSeenIntro = false
@@ -348,7 +349,10 @@ final class AppModel {
         let isNew = seenAlerts.markSeen(incoming.id)
         now = Date()
         guard incoming.isActive(at: now) else { return isNew }
-        if isNew || fromTap { alert = incoming }
+        if isNew || fromTap {
+            alert = incoming
+            alertCameFromTap = fromTap
+        }
         let remaining = incoming.sentAt.addingTimeInterval(EarthquakeAlert.lifetime).timeIntervalSinceNow
         Task { [weak self] in
             try? await Task.sleep(for: .seconds(max(remaining, 0) + 0.5))

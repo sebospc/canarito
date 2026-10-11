@@ -12,6 +12,8 @@ public struct EarthquakeAlert: Equatable, Sendable {
     public let sentAt: Date
     public let isLate: Bool
     public let isTest: Bool
+    /// A drill from `canarito.py drill`: shown like a real alert, marked as practice.
+    public let isDrill: Bool
 
     /// `apns-expiration` is `sent_at + 180`: after that the warning no longer helps anyone take cover.
     public static let lifetime: TimeInterval = 180
@@ -19,7 +21,7 @@ public struct EarthquakeAlert: Equatable, Sendable {
     public static let lateAfter: TimeInterval = 60
 
     public init(id: String, title: String, body: String, magnitude: Double? = nil, occurredAt: Date? = nil,
-                sentAt: Date, isLate: Bool? = nil, isTest: Bool = false) {
+                sentAt: Date, isLate: Bool? = nil, isTest: Bool = false, isDrill: Bool = false) {
         self.id = id
         self.title = title
         self.body = body
@@ -27,6 +29,7 @@ public struct EarthquakeAlert: Equatable, Sendable {
         self.occurredAt = occurredAt
         self.sentAt = sentAt
         self.isTest = isTest
+        self.isDrill = isDrill
         self.isLate = isLate ?? occurredAt.map { sentAt.timeIntervalSince($0) > Self.lateAfter } ?? false
     }
 

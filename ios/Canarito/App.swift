@@ -54,17 +54,27 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         MainActor.assumeIsolated { model.tokenFailed(error) }
     }
 
+    // The completion-handler forms on purpose: build 3 used the `async` forms, and iOS ran their generated
+    // thunk off the main thread, where it touched UIApplication and aborted on tapping a push.
     /// In the foreground the app shows the alert screen itself; a repeat of the same alert id stays silent.
-    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification) async
-        -> UNNotificationPresentationOptions {
-        guard let alert = EarthquakeAlert(userInfo: notification.request.content.userInfo) else { return [.banner, .list, .sound] }
-        let isNew = await MainActor.run { model.received(alert) }
-        return isNew ? [.banner, .list, .sound] : []
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, willPresent notification: UNNotification,
+                                            withCompletionHandler completionHandler: @escaping @Sendable (UNNotificationPresentationOptions) -> Void) {
+        nonisolated(unsafe) let userInfo = notification.request.content.userInfo
+        Task { @MainActor in
+            guard let alert = EarthquakeAlert(userInfo: userInfo) else { return completionHandler([.banner, .list, .sound]) }
+            let isNew = model.received(alert)
+            // A real alert on screen plays its own sound (AlertView); a banner sound on top would overlap it.
+            completionHandler(isNew ? (alert.isTest ? [.banner, .list, .sound] : [.banner, .list]) : [])
+        }
     }
 
-    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse) async {
-        guard let alert = EarthquakeAlert(userInfo: response.notification.request.content.userInfo) else { return }
-        _ = await MainActor.run { model.received(alert, fromTap: true) }
+    nonisolated func userNotificationCenter(_ center: UNUserNotificationCenter, didReceive response: UNNotificationResponse,
+                                            withCompletionHandler completionHandler: @escaping @Sendable () -> Void) {
+        nonisolated(unsafe) let userInfo = response.notification.request.content.userInfo
+        Task { @MainActor in
+            if let alert = EarthquakeAlert(userInfo: userInfo) { _ = model.received(alert, fromTap: true) }
+            completionHandler()
+        }
     }
 
     private static func makeService() -> any CanaritoService {

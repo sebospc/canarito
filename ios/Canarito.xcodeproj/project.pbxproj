@@ -9,10 +9,12 @@
 /* Begin PBXBuildFile section */
 		06AC17834EC85D64965F0FE0 /* InfoPlist.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = DB2B3877C759E0619647A631 /* InfoPlist.xcstrings */; };
 		19AB75F4D128ECB33215E241 /* Localizable.xcstrings in Resources */ = {isa = PBXBuildFile; fileRef = 1B2F0B785766120A76A4EAD2 /* Localizable.xcstrings */; };
+		25E94CD28916A0F6EEF1B894 /* canarito-alert.caf in Resources */ = {isa = PBXBuildFile; fileRef = 1240A9D3CE597EF80F705C5D /* canarito-alert.caf */; };
 		618BB218472290A6C4490348 /* OFL.txt in Resources */ = {isa = PBXBuildFile; fileRef = 1B4C3BDAEF53AC74E275BB7E /* OFL.txt */; };
 		6486A19415EA9707AA206B13 /* BricolageGrotesque-Variable.ttf in Resources */ = {isa = PBXBuildFile; fileRef = BB477B407866C27B792C0EFA /* BricolageGrotesque-Variable.ttf */; };
 		67294D7BA0DFD19873A81F7F /* SettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 90C4CA80A7D8A2022489A2D9 /* SettingsView.swift */; };
 		6750CF08053B6CF9A110D2C4 /* LocationService.swift in Sources */ = {isa = PBXBuildFile; fileRef = 315FE5DC17DE2C2046E9C813 /* LocationService.swift */; };
+		6AD19269E13593D06124657D /* AlertSound.swift in Sources */ = {isa = PBXBuildFile; fileRef = 1A07B58523202E8E55B1C8B4 /* AlertSound.swift */; };
 		8118207852FECCB063E753EE /* RootView.swift in Sources */ = {isa = PBXBuildFile; fileRef = BAA6802CD566251AD8584525 /* RootView.swift */; };
 		81DFEFD72EBE14D508F92846 /* AppModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = 492D2E044919D7AC2431A781 /* AppModel.swift */; };
 		9240D45FCF729AB356456E3B /* PairView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 753988503F0C1F22D1ED2447 /* PairView.swift */; };
@@ -41,6 +43,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		1240A9D3CE597EF80F705C5D /* canarito-alert.caf */ = {isa = PBXFileReference; path = "canarito-alert.caf"; sourceTree = "<group>"; };
+		1A07B58523202E8E55B1C8B4 /* AlertSound.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AlertSound.swift; sourceTree = "<group>"; };
 		1B2F0B785766120A76A4EAD2 /* Localizable.xcstrings */ = {isa = PBXFileReference; lastKnownFileType = text.json.xcstrings; path = Localizable.xcstrings; sourceTree = "<group>"; };
 		1B4C3BDAEF53AC74E275BB7E /* OFL.txt */ = {isa = PBXFileReference; lastKnownFileType = text; path = OFL.txt; sourceTree = "<group>"; };
 		23D8C15ED66293F604C0D085 /* IntroView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = IntroView.swift; sourceTree = "<group>"; };
@@ -92,6 +96,7 @@
 		0F2DA944D93ECF8490D4AFF3 /* Canarito */ = {
 			isa = PBXGroup;
 			children = (
+				1A07B58523202E8E55B1C8B4 /* AlertSound.swift */,
 				8A12DCDD3CB98A73B1CA7781 /* AlertView.swift */,
 				30C8201C17FE3250070404F2 /* App.swift */,
 				492D2E044919D7AC2431A781 /* AppModel.swift */,
@@ -112,6 +117,7 @@
 				BA59151D3C1E2C1FDDDDEB4E /* Samples.swift */,
 				90C4CA80A7D8A2022489A2D9 /* SettingsView.swift */,
 				590657026C883321D86AB434 /* Fonts */,
+				8F1BCA0EFD75EA5797B94BD2 /* Sounds */,
 			);
 			path = Canarito;
 			sourceTree = "<group>";
@@ -133,6 +139,14 @@
 				1B4C3BDAEF53AC74E275BB7E /* OFL.txt */,
 			);
 			path = Fonts;
+			sourceTree = "<group>";
+		};
+		8F1BCA0EFD75EA5797B94BD2 /* Sounds */ = {
+			isa = PBXGroup;
+			children = (
+				1240A9D3CE597EF80F705C5D /* canarito-alert.caf */,
+			);
+			path = Sounds;
 			sourceTree = "<group>";
 		};
 		DA7E94D822EEC2373F159137 /* CanaritoUITests */ = {
@@ -247,6 +261,7 @@
 				19AB75F4D128ECB33215E241 /* Localizable.xcstrings in Resources */,
 				618BB218472290A6C4490348 /* OFL.txt in Resources */,
 				E2F618A04AAEB519FC07FBD4 /* PrivacyInfo.xcprivacy in Resources */,
+				25E94CD28916A0F6EEF1B894 /* canarito-alert.caf in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -257,6 +272,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				6AD19269E13593D06124657D /* AlertSound.swift in Sources */,
 				93E84933BCBF5B10FE9A9A33 /* AlertView.swift in Sources */,
 				C3A479CB68A9DCC9BD25842E /* App.swift in Sources */,
 				81DFEFD72EBE14D508F92846 /* AppModel.swift in Sources */,
@@ -401,7 +417,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				DEVELOPMENT_TEAM = BGKJDXR2L4;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -472,7 +488,7 @@
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
 				CODE_SIGN_STYLE = Automatic;
 				COPY_PHASE_STRIP = NO;
-				CURRENT_PROJECT_VERSION = 3;
+				CURRENT_PROJECT_VERSION = 4;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				DEVELOPMENT_TEAM = BGKJDXR2L4;
 				ENABLE_NS_ASSERTIONS = NO;

@@ -32,6 +32,9 @@ enum Samples {
                                    occurredAt: sentAt - 95, sentAt: sentAt, isLate: true))
         case "alert-test":
             .alert(EarthquakeAlert(id: "test", title: "Aviso de prueba", body: "Esto es una prueba.", sentAt: sentAt, isTest: true))
+        case "alert-drill":
+            .alert(EarthquakeAlert(id: "drill-1", title: "SIMULACRO: Alerta de sismo", body: "SIMULACRO: sismo M5.4 cerca de tu zona. Protégete ahora.",
+                                   magnitude: 5.4, sentAt: sentAt, isDrill: true))
         case "unreachable": .error(.serverUnreachable)
         case "relay-down": .error(.relayDown)
         case "receptor-down": .error(.receptorDown)

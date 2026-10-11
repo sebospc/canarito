@@ -52,6 +52,7 @@ EN = {
     "Esta app no es un sistema oficial. Puede fallar o llegar tarde, y no reemplaza las indicaciones de las autoridades.":
         "This app is not an official system. It can fail or arrive late, and it does not replace the instructions of the authorities.",
     "Estado": "Status",
+    "Simulacro: no es un sismo real": "Drill: this is not a real earthquake",
     "Este código es de una versión más nueva. Actualiza la app.": "This code is from a newer version. Update the app.",
     "Apple no dejó registrar este iPhone para recibir avisos (%@). Revisa tu conexión y vuelve a intentarlo.":
         "Apple would not register this iPhone to receive alerts (%@). Check your connection and try again.",

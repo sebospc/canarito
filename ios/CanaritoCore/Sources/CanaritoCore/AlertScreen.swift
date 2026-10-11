@@ -2,7 +2,7 @@ import Foundation
 
 /// What the alert screen shows, decided here so the view only draws it.
 public struct AlertScreen: Equatable, Sendable {
-    public enum Kind: Equatable, Sendable { case alert, late, test }
+    public enum Kind: Equatable, Sendable { case alert, late, test, drill }
 
     public enum Elapsed: Equatable, Sendable {
         case seconds(Int), minutes(Int)
@@ -20,13 +20,13 @@ public struct AlertScreen: Equatable, Sendable {
     public let showsAfterSteps: Bool
 
     public init(_ alert: EarthquakeAlert, now: Date, locale: Locale) {
-        kind = alert.isTest ? .test : alert.isLate ? .late : .alert
+        kind = alert.isTest ? .test : alert.isDrill ? .drill : alert.isLate ? .late : .alert
         title = alert.title
         body = alert.body
         magnitudeText = alert.magnitudeText(locale: locale)
         elapsed = alert.occurredAt.map { Self.elapsed(since: $0, now: now) }
         showsProtectiveLine = kind != .late
-        showsAfterSteps = kind == .alert
+        showsAfterSteps = kind == .alert || kind == .drill
     }
 
     public static func elapsed(since occurredAt: Date, now: Date) -> Elapsed {

@@ -8,16 +8,20 @@ import SwiftUI
 struct AlertView: View {
     let alert: EarthquakeAlert
     let now: Date
+    /// False when the person tapped the push: its own sound already rang, a second one would overlap it.
+    let playsSound: Bool
     let onClose: () -> Void
 
-    init(alert: EarthquakeAlert, now: Date, startsOnAfterScreen: Bool = false, onClose: @escaping () -> Void) {
+    init(alert: EarthquakeAlert, now: Date, playsSound: Bool = true, startsOnAfterScreen: Bool = false, onClose: @escaping () -> Void) {
         self.alert = alert
         self.now = now
+        self.playsSound = playsSound
         self.onClose = onClose
         _showingAfter = State(initialValue: startsOnAfterScreen)
     }
 
     @State private var haptics: CHHapticEngine?
+    @State private var sound = AlertSound()
     @State private var showingAfter: Bool
     @ScaledMetric(relativeTo: .callout) private var pictogramSize = 84
     @Environment(\.dynamicTypeSize) private var dynamicTypeSize
@@ -30,7 +34,7 @@ struct AlertView: View {
                 AfterView(onDone: onClose)
             } else {
                 switch screen.kind {
-                case .alert: alertScreen
+                case .alert, .drill: alertScreen
                 case .late: lateScreen
                 case .test: testScreen
                 }
@@ -40,11 +44,15 @@ struct AlertView: View {
         .onAppear {
             UIApplication.shared.isIdleTimerDisabled = true
             // Late and test alerts: nothing a real, on-time alert does beyond the sound.
-            if screen.kind == .alert { playHaptics() }
+            if screen.kind == .alert || screen.kind == .drill {
+                playHaptics()
+                if playsSound { sound.start() }
+            }
         }
         .onDisappear {
             UIApplication.shared.isIdleTimerDisabled = false
             haptics?.stop()
+            sound.stop()
         }
     }
 
@@ -68,6 +76,13 @@ struct AlertView: View {
 
     private var alertScreen: some View {
         screenLayout(background: Brand.canary, foreground: Brand.onCanary, scheme: .light, topPadding: 50) {
+            if screen.kind == .drill {
+                Text("Simulacro: no es un sismo real").font(.subheadline.weight(.bold)).foregroundStyle(Brand.canary)
+                    .padding(.horizontal, 12).padding(.vertical, 8)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .background(Brand.onCanary, in: .rect(cornerRadius: 10)).padding(.bottom, 10)
+                    .accessibilityIdentifier("drillBand")
+            }
             HStack(alignment: .firstTextBaseline) {
                 Text(verbatim: screen.title).displayTitle(size: 20, relativeTo: .title3).accessibilityIdentifier("alertTitle")
                     .accessibilityAddTraits(.isHeader)
