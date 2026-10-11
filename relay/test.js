@@ -96,6 +96,21 @@ test("critical alerts only when the server asks", async () => {
   world.close();
 });
 
+test("real alerts and drills use the Canarito sound, tests keep the default one, the payload says which", async () => {
+  const world = await setup();
+  const server = await world.register();
+  const handle = await world.handleFor(server.server_id);
+  for (const [extra, critical] of [[{}, false], [{ drill: true }, false], [{ test: true }, false], [{}, true], [{ test: true }, true]]) {
+    await world.signedPush(server, { handles: [handle], alert: { ...ALERT, ...extra }, critical });
+  }
+  const sounds = world.received.map(({ body }) => body.aps.sound);
+  assert.deepStrictEqual(sounds, ["canarito-alert.caf", "canarito-alert.caf", "default",
+    { critical: 1, name: "canarito-alert.caf", volume: 1.0 }, { critical: 1, name: "default", volume: 1.0 }]);
+  const flags = world.received.map(({ body }) => [body.canarito.test, body.canarito.drill]);
+  assert.deepStrictEqual(flags, [[undefined, undefined], [undefined, true], [true, undefined], [undefined, undefined], [true, undefined]]);
+  world.close();
+});
+
 test("a handle paired to another server is rejected and nothing reaches APNs", async () => {
   const world = await setup();
   const mine = await world.register();

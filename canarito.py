@@ -1297,6 +1297,29 @@ No camera? Paste this in the app instead:
 """)
 
 
+def drill(args):
+    """A fake alert, clearly marked, through the real push path to the phones of one receptor only:
+    the app shows its full alert screen and plays the alert sound. It does not touch the receptor's
+    ntfy link, so nobody on Android sees it, and it is limited to one every 10 minutes."""
+    config = load_config(args.name)
+    wait = appserver.drill_wait(CONFIG_DIR / f"{args.name}.drill-at", time.time())
+    if wait:
+        sys.exit(f"A drill was sent less than 10 minutes ago. Try again in {int(wait // 60) + 1} min.")
+    devices = appserver.Devices(CONFIG_DIR)
+    phones = len(devices.handles_for(args.name))
+    if not phones:
+        sys.exit(f'No phones are paired with "{args.name}" (demo phones never get drills).')
+    health = Health(config, lambda audience, text, priority: post_notice(
+        config.get("admin_url") or config["notify_url"], config.get("notify_token"), text, priority))
+    alert = appserver.drill_alert(args.name, config["language"], time.time())
+    log(f"drill {alert['id']} to {phones} phone(s) of {args.name}")
+    missed = appserver.deliver_alert(devices, lambda: appserver.load_relay(CONFIG_DIR), health, args.name,
+                                     alert, lambda ok: set_relay_ok(args.name, ok))
+    if missed:
+        sys.exit(f"The drill did not reach {missed} of {phones} phone(s). The admin link has the reason.")
+    print(f"Drill sent to {phones} phone(s).")
+
+
 def serve(args):
     """What the app talks to: pairing, positions, status. Put HTTPS in front of it (a tunnel or a
     reverse proxy); it listens on this computer only unless told otherwise."""
@@ -1355,6 +1378,10 @@ def main(argv=None):
                              help="App Review: a reusable code whose phones get test alerts only (off by default)")
     pair_parser.add_argument("--demo-off", action="store_true", help="turn demo mode off and remove its phones")
     pair_parser.set_defaults(handler=pair)
+
+    drill_parser = commands.add_parser("drill", help="send a marked drill alert to the iPhones of a receptor")
+    drill_parser.add_argument("--name", required=True)
+    drill_parser.set_defaults(handler=drill)
 
     serve_parser = commands.add_parser("serve", help="run the server the iPhone app talks to")
     serve_parser.add_argument("--bind", default="127.0.0.1")

@@ -150,6 +150,14 @@ The server sends an alert to the relay when its receptor posts one to the recept
   `"critical": true` in the push request (section 5) and the relay sends `critical` with sound
   `{"critical": 1, "name": "default", "volume": 1.0}`. The app needs no change for the payload.
 
+- Sound: real alerts and drills use `canarito-alert.caf` (the app ships it; with `critical` the
+  sound is `{"critical": 1, "name": "canarito-alert.caf", "volume": 1.0}`). Test pushes
+  (`canarito.test: true`) keep `"default"`.
+- `canarito.drill: true`: a drill sent by `canarito.py drill --name X`, to the phones of that
+  receptor only (never demo phones). Title starts with `SIMULACRO` or `DRILL`, and so does the
+  body. The app shows the full alert screen and plays the sound, and must mark it as a drill on
+  that screen. `id` starts with `drill-`. Limited to one per receptor every 10 minutes.
+
 ### 4a. Status and test
 
 `GET {server}/v1/status` (Bearer) answers `200`:

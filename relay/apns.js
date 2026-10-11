@@ -35,16 +35,20 @@ function jwtCache() {
   };
 }
 
+// The sound the iOS app ships. A test push keeps the system sound: it must not sound like a quake.
+const ALERT_SOUND = "canarito-alert.caf";
+
 function alertPayload(alert, critical) {
-  const aps = { alert: { title: alert.title, body: alert.body }, sound: "default", "interruption-level": "time-sensitive" };
+  const sound = alert.test === true ? "default" : ALERT_SOUND;
+  const aps = { alert: { title: alert.title, body: alert.body }, sound, "interruption-level": "time-sensitive" };
   if (critical) {
-    aps.sound = { critical: 1, name: "default", volume: 1.0 };
+    aps.sound = { critical: 1, name: sound, volume: 1.0 };
     aps["interruption-level"] = "critical";
   }
   const canarito = { v: 1, id: alert.id, receptor: alert.receptor, lang: alert.lang, sent_at: alert.sent_at };
   // Optional facts the app shows next to the text; passed on only when the server knew them.
   for (const key of ["magnitude", "occurred_at"]) if (Number.isFinite(alert[key])) canarito[key] = alert[key];
-  for (const key of ["late", "test"]) if (alert[key] === true) canarito[key] = true;
+  for (const key of ["late", "test", "drill"]) if (alert[key] === true) canarito[key] = true;
   return { aps, canarito };
 }
 

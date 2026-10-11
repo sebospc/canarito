@@ -25,6 +25,7 @@ PUSH_FAILURE_MEMORY_S = 15 * 60
 RELAY_CHECK_EVERY_S = 5 * 60
 POSITION_EVERY_S = 10
 TEST_EVERY_S = 10 * 60
+DRILL_EVERY_S = 10 * 60
 DEMO_TEST_EVERY_S = 10
 # A demo secret is reusable, so its devices are capped: the oldest go first.
 MAX_DEMO_DEVICES = 50
@@ -250,6 +251,33 @@ def alert_from_event(event, receptor, language, now):
     return alert
 
 
+DRILL_TEXT = {
+    "es": ("SIMULACRO de Canarito", "SIMULACRO. No hay ningún sismo, es una prueba de Canarito. No hagas nada."),
+    "en": ("Canarito DRILL", "DRILL. There is no earthquake, this is a Canarito test. Do nothing."),
+}
+
+
+def drill_alert(receptor, language, now):
+    """A fake alert for the phones of one receptor. It is not an ntfy event, so the receptor's own
+    link, and the Android phones on it, never see it. Marked in the title, the body and `drill`."""
+    title, body = DRILL_TEXT.get(language, DRILL_TEXT["es"])
+    return {"id": f"drill-{secrets.token_hex(4)}", "receptor": receptor, "lang": language,
+            "title": title, "body": body, "sent_at": int(now), "drill": True}
+
+
+def drill_wait(stamp_path, now):
+    """Seconds until a drill is allowed again; 0 when it is, and then the time is recorded."""
+    try:
+        wait = float(stamp_path.read_text()) + DRILL_EVERY_S - now
+    except (OSError, ValueError):
+        wait = 0
+    if wait > 0:
+        return wait
+    stamp_path.write_text(str(now))
+    stamp_path.chmod(0o600)
+    return 0
+
+
 def check_relay(devices, relay_loader, health, receptor, set_relay_ok, clock=time.time, sleep=time.sleep):
     """Between alerts: tells the admin and the app that the relay is down before a quake finds out.
     Silent for a receptor with no phones. A failure is confirmed once more before it is told."""
@@ -283,7 +311,9 @@ def deliver_alert(devices, relay_loader, health, receptor, alert, set_relay_ok,
     still worth sending, until each one got it. Whatever does not work is told to the admin: a
     failure here is never silent."""
     pending = devices.handles_for(receptor)
-    while pending:
+    if not pending:
+        return 0
+    while True:
         failure = None
         ids = list(pending)
         # Chunks, because a relay refuses a request over its body limit and then nobody gets it.
@@ -316,10 +346,10 @@ def deliver_alert(devices, relay_loader, health, receptor, alert, set_relay_ok,
             health.clear("relay")
             set_relay_ok(True)
         if not pending:
-            return
+            return 0
         if clock() - alert["sent_at"] > ALERT_TTL_S:
             health.note("alert_not_pushed", count=len(pending), error=failure or "")
-            return
+            return len(pending)
         sleep(RETRY_EVERY_S)
 
 

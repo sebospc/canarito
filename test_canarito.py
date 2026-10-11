@@ -694,6 +694,40 @@ class AppTest(unittest.TestCase):
         self.deliver(relay)
         self.assertEqual(relay.pushes, [])
 
+    def test_a_drill_is_marked_reaches_only_that_receptors_phones_and_is_rate_limited(self):
+        self.pair_phone("h1")
+        self.devices.pair(self.devices.new_pairing("novia", self.now), "h3", "x", self.now)
+        demo = self.devices.pair(self.devices.new_pairing("sebastian", self.now, demo=True), "hd", "review", self.now)
+        for language, marker in (("es", "SIMULACRO"), ("en", "DRILL")):
+            alert = appserver.drill_alert("sebastian", language, self.now)
+            self.assertTrue(alert["drill"] and not alert.get("test"))
+            self.assertIn(marker, alert["title"])
+            self.assertTrue(alert["body"].startswith(marker))
+            self.assertNotEqual(alert["id"], appserver.drill_alert("sebastian", language, self.now)["id"])
+        relay = FakeRelay(["sent"])
+        appserver.deliver_alert(self.devices, lambda: relay, self.health, "sebastian", alert,
+                                lambda ok: None, clock=lambda: self.now, sleep=lambda s: None)
+        self.assertEqual(relay.pushes[0][0], ["h1"])  # not novia's phone, not the demo phone
+        self.assertIn(demo["device_id"], self.devices.snapshot()["devices"])
+        stamp = self.config_dir / "sebastian.drill-at"
+        self.assertEqual(appserver.drill_wait(stamp, self.now), 0)
+        self.assertGreater(appserver.drill_wait(stamp, self.now + 60), 0)
+        self.assertEqual(appserver.drill_wait(stamp, self.now + appserver.DRILL_EVERY_S), 0)
+
+    def test_drill_command_pushes_once_and_refuses_a_second_one(self):
+        self.pair_phone("h1")
+        relay = FakeRelay(["sent"])
+        config = {"name": "sebastian", "language": "en", "notify_url": "https://ntfy.example/x"}
+        with mock.patch.object(canarito, "load_config", return_value=config), \
+                mock.patch.object(appserver, "load_relay", return_value=relay), \
+                mock.patch.object(canarito, "post_notice") as notice:
+            canarito.main(["drill", "--name", "sebastian"])
+            with self.assertRaises(SystemExit):
+                canarito.main(["drill", "--name", "sebastian"])
+        self.assertEqual(len(relay.pushes), 1)
+        self.assertEqual(relay.pushes[0][1]["title"], "Canarito DRILL")
+        notice.assert_not_called()  # nothing went to the receptor's family link
+
     def test_twenty_phones_all_get_the_alert_through_a_relay_that_refuses_big_requests(self):
         for number in range(20):
             self.pair_phone(f"h{number}")
