@@ -53,6 +53,8 @@ EN = {
         "This app is not an official system. It can fail or arrive late, and it does not replace the instructions of the authorities.",
     "Estado": "Status",
     "Este código es de una versión más nueva. Actualiza la app.": "This code is from a newer version. Update the app.",
+    "Apple no dejó registrar este iPhone para recibir avisos (%@). Revisa tu conexión y vuelve a intentarlo.":
+        "Apple would not register this iPhone to receive alerts (%@). Check your connection and try again.",
     "Este iPhone no pudo registrarse para recibir avisos. Revisa los permisos de notificaciones y tu conexión.":
         "This iPhone could not register to receive alerts. Check notification permissions and your connection.",
     "Falta tu ubicación": "Your location is missing",

@@ -103,6 +103,23 @@
         }
       }
     },
+    "Apple no dejó registrar este iPhone para recibir avisos (%@). Revisa tu conexión y vuelve a intentarlo.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple no dejó registrar este iPhone para recibir avisos (%@). Revisa tu conexión y vuelve a intentarlo."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple would not register this iPhone to receive alerts (%@). Check your connection and try again."
+          }
+        }
+      }
+    },
     "Así sonará un aviso de sismo. Esto es solo una prueba.": {
       "extractionState": "manual",
       "localizations": {

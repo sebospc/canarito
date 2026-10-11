@@ -14,7 +14,7 @@ settings:
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     MARKETING_VERSION: "0.1"
     # Raise on every TestFlight upload: App Store Connect refuses a build number it has seen.
-    CURRENT_PROJECT_VERSION: "1"
+    CURRENT_PROJECT_VERSION: "2"
     # The one place to change the bundle id. The relay's APNs topic must be the same value.
     APP_BUNDLE_ID: app.canarito
     # The owner's Apple team id (App Store Connect, Membership).

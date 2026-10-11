@@ -15,6 +15,8 @@ enum PairingProblem: Equatable {
     case unreachable
     /// The phone has no APNs token, so no alert could ever reach it.
     case noPushToken
+    /// iOS refused the APNs registration; the text is the system's error, shown so a tester can report it.
+    case pushRegistrationFailed(String)
     case other(String)
 }
 
@@ -45,6 +47,7 @@ final class AppModel {
     private(set) var locationAccess: LocationAccess = .notDetermined
     private(set) var apnsToken: String?
     private(set) var apnsFailed = false
+    private(set) var apnsError: String?
     private(set) var status: StatusOutcome = .unknown
     private(set) var alert: EarthquakeAlert?
     private(set) var now = Date()
@@ -165,6 +168,7 @@ final class AppModel {
     func tokenArrived(_ data: Data) {
         apnsToken = data.map { String(format: "%02x", $0) }.joined()
         apnsFailed = false
+        apnsError = nil
         Task { await syncToken() }
     }
 
@@ -172,6 +176,7 @@ final class AppModel {
         // The Simulator has no APNs: a UI test with a fake token must not be overruled by that failure.
         guard !Samples.fakeToken else { return }
         apnsFailed = true
+        apnsError = error.localizedDescription
         log.error("APNs registration failed: \(error.localizedDescription, privacy: .public)")
     }
 
@@ -201,7 +206,9 @@ final class AppModel {
     // MARK: pairing
 
     func pair(_ invite: PairingInvite) async -> PairingProblem? {
-        guard let token = await waitForToken() else { return .noPushToken }
+        guard let token = await waitForToken() else {
+            return apnsFailed ? .pushRegistrationFailed(apnsError ?? "") : .noPushToken
+        }
         do throws(ServerFailure) {
             let handle = try await service.handle(relay: invite.relay, serverID: invite.serverID, apnsToken: token, environment: pushEnvironment)
             let result = try await service.pair(invite: invite, handle: handle, deviceName: UIDevice.current.name)
@@ -250,9 +257,14 @@ final class AppModel {
         #endif
     }
 
+    /// Pairing can start before the first-run permissions did (or on a slow network), so it asks for the
+    /// token itself instead of waiting for a registration nobody started.
     private func waitForToken() async -> String? {
-        for _ in 0..<40 where apnsToken == nil { try? await Task.sleep(for: .milliseconds(250)) }
-        return apnsToken
+        if apnsToken == nil {
+            apnsFailed = false
+            UIApplication.shared.registerForRemoteNotifications()
+        }
+        return await Polling.wait(attempts: 120, interval: .milliseconds(250), giveUp: { apnsFailed }) { apnsToken }
     }
 
     /// Returns false when the server could not be told; the caller may then forget the pairing anyway.
