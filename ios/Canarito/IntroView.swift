@@ -14,7 +14,7 @@ struct IntroView: View {
                 Text("Avisos de sismo de tu servidor, en tu iPhone.").displayTitle(size: 30, relativeTo: .title)
                     .accessibilityAddTraits(.isHeader).padding(.top, 32)
                 row("bell.badge.fill", "Suena cuando hay un sismo",
-                    "Cuando el receptor de tu servidor recibe un aviso de Android Earthquake Alerts, tu iPhone suena.")
+                    "Cuando el receptor de tu servidor recibe una alerta temprana de sismo, tu iPhone suena.")
                 row("location.fill", "Pide tu ubicación «Siempre»",
                     "Para que el receptor esté donde estás, Canarito envía a tu servidor tu posición redondeada a 1 km, solo cuando te mueves. Tu posición exacta no sale del iPhone.")
                 row("person.crop.circle.badge.xmark", "Sin cuentas",

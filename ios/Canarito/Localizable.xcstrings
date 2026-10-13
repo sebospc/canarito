@@ -392,19 +392,19 @@
         }
       }
     },
-    "Cuando el receptor de tu servidor recibe un aviso de Android Earthquake Alerts, tu iPhone suena.": {
+    "Cuando el receptor de tu servidor recibe una alerta temprana de sismo, tu iPhone suena.": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuando el receptor de tu servidor recibe un aviso de Android Earthquake Alerts, tu iPhone suena."
+            "value": "Cuando el receptor de tu servidor recibe una alerta temprana de sismo, tu iPhone suena."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When your server's receptor gets an Android Earthquake Alerts warning, your iPhone sounds."
+            "value": "When your server's receptor gets an earthquake early warning, your iPhone sounds."
           }
         }
       }

@@ -26,8 +26,8 @@ EN = {
     "Comprueba tus avisos de sismo": "Check your earthquake alerts",
     "Con un modo de Concentración activo, el aviso puede llegar en silencio.": "With a Focus on, the alert may arrive silently.",
     "Continuar": "Continue",
-    "Cuando el receptor de tu servidor recibe un aviso de Android Earthquake Alerts, tu iPhone suena.":
-        "When your server's receptor gets an Android Earthquake Alerts warning, your iPhone sounds.",
+    "Cuando el receptor de tu servidor recibe una alerta temprana de sismo, tu iPhone suena.":
+        "When your server's receptor gets an earthquake early warning, your iPhone sounds.",
     "Cuando pare el temblor": "When the shaking stops",
     "Cómo se usan tus datos": "How your data is used",
     "Dejarás de recibir avisos de este servidor.": "You will stop receiving alerts from this server.",
