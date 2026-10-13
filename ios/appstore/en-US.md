@@ -7,15 +7,15 @@ Canarito
 Earthquake alerts, your server
 
 ## Promotional text [170]
-Your iPhone sounds when your server's receptor gets an Android earthquake alert. Free, open source, no accounts.
+Your iPhone sounds when your server's receptor gets an earthquake early warning. Free, open source, no accounts.
 
 ## Keywords [100]
 earthquake,quake,alert,warning,emergency,safety,seismic,server,open source,sismo,temblor
 
 ## Description [4000]
-Canarito brings Android Earthquake Alerts to your iPhone.
+Canarito brings earthquake early warnings to your iPhone.
 
-It is part of an open source project. Someone runs a Canarito server (it can be you, or a friend or relative). The server has one or more receptors: Android emulators at a fixed place that receive Google's alerts. When an alert arrives, the server sends it to your iPhone and it sounds.
+It is part of an open source project. Someone runs a Canarito server (it can be you, or a friend or relative). The server has one or more receptors: devices at a fixed place that receive earthquake early warnings. When an alert arrives, the server sends it to your iPhone and it sounds.
 
 How to use it
 1. On the server's computer run canarito.py pair. A QR code appears.

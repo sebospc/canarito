@@ -9,15 +9,15 @@ Canarito
 Avisos de sismo de tu servidor
 
 ## Promotional text [170]
-Tu iPhone suena cuando el receptor de tu servidor recibe un aviso de sismo de Android. Gratis, de código abierto y sin cuentas.
+Tu iPhone suena cuando el receptor de tu servidor recibe una alerta temprana de sismo. Gratis, de código abierto y sin cuentas.
 
 ## Keywords [100]
 sismo,temblor,terremoto,alerta,aviso,emergencia,earthquake,servidor,código abierto,seguridad
 
 ## Description [4000]
-Canarito lleva a tu iPhone los avisos de sismo de Android Earthquake Alerts.
+Canarito lleva a tu iPhone las alertas tempranas de sismo.
 
-Es parte de un proyecto de código abierto. Alguien instala un servidor de Canarito (puedes ser tú, o un amigo o familiar). El servidor tiene uno o más receptores: emuladores de Android en un lugar fijo que reciben los avisos de Google. Cuando llega un aviso, el servidor se lo manda a tu iPhone y suena.
+Es parte de un proyecto de código abierto. Alguien instala un servidor de Canarito (puedes ser tú, o un amigo o familiar). El servidor tiene uno o más receptores: equipos en un lugar fijo que reciben las alertas tempranas de sismo. Cuando llega un aviso, el servidor se lo manda a tu iPhone y suena.
 
 Cómo se usa
 1. En el computador del servidor ejecuta canarito.py pair. Aparece un código QR.
