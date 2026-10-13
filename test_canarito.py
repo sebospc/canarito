@@ -594,6 +594,7 @@ class AppTest(unittest.TestCase):
         self.assertEqual(call("POST", "/v1/test", key=demo["device_key"])[0], 204)
         self.assertEqual(call("POST", "/v1/position", {"lat": 4.7, "lon": -74.1}, demo["device_key"])[0], 204)
         self.assertIsNone(canarito.read_app_position("sebastian"))
+        self.assertEqual(call("GET", "/v1/status", key=demo["device_key"])[1]["covered"], True)
 
     def test_turning_demo_off_removes_its_phones_and_the_code_but_not_real_phones(self):
         secret = self.devices.new_pairing("sebastian", self.now, demo=True)

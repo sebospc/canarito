@@ -428,6 +428,9 @@ def make_server(bind, port, devices, relay_loader, status_for, language_for, sav
                 devices.remove(device_id)
                 return self.reply(204)
             if (method, path) == ("GET", "/v1/status"):
+                if device.get("demo"):  # a demo server has no receptor running; the reviewer must see a working app
+                    return self.reply(200, {"receptor": device["receptor"], "covered": True, "receptor_up": True,
+                                            "relay_ok": True, "following": False})
                 return self.reply(200, status_for(device["receptor"]))
             if (method, path) == ("POST", "/v1/position"):
                 text = self.body()
