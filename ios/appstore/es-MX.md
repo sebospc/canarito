@@ -39,16 +39,13 @@ Privacidad
 Importante
 Canarito no es un sistema oficial. Los avisos pueden llegar tarde, no llegar, o llegar sin que haya sismo. Si sientes un sismo, protégete aunque no suene nada.
 
-Necesitas un servidor de Canarito. El código y las instrucciones están en github.com/sebospc/canarito.
+Necesitas un servidor de Canarito, tuyo o de alguien de confianza.
 
 ## What's New [4000]
 Primera versión.
 
 ## Support URL
-https://github.com/sebospc/canarito
-
-## Marketing URL
-https://canarito.app
+https://canarito.app/support/
 
 ## Privacy Policy URL
 https://canarito.app/privacy

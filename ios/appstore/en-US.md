@@ -37,10 +37,10 @@ Privacy
 Important
 Canarito is not an official system. Alerts can arrive late, not arrive, or arrive without an earthquake. If you feel an earthquake, protect yourself even if nothing sounds.
 
-You need a Canarito server. Code and instructions are at github.com/sebospc/canarito.
+You need a Canarito server, your own or one run by someone you trust.
 
 ## What's New [4000]
 First version.
 
 ## Support URL
-https://github.com/sebospc/canarito
+https://canarito.app/en/support/

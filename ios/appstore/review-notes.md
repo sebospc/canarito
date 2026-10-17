@@ -21,9 +21,8 @@ server by scanning a QR code, so we provide a demo server.
 - Notifications: time-sensitive. Critical Alerts are not requested in this version.
 - Camera: only to read the linking QR. The link can be pasted instead.
 - No purchases, ads, tracking or third-party SDKs. No data goes to the developer. Alerts pass
-  through an open source push relay (`relay/` in the repository) that stores nothing.
+  through an open source push relay that stores nothing.
 - Not an official alert system, and the app says so on the first screen and in Settings.
-- Source code: https://github.com/sebospc/canarito
 
 ## Demo server (owner, before submitting)
 The pairing code of a real server works once for 10 minutes. For review use demo mode, which

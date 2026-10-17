@@ -281,6 +281,52 @@ PRIVACY = {
 }
 
 
+SUPPORT = {
+    "es": {
+        "path": "support/index.html", "home": "/", "other": "/en/support/", "other_label": "English", "other_lang": "en", "locale": "es_CO",
+        "title": "Ayuda de Canarito", "description": "Cómo vincular la app de Canarito, probar un aviso y pedir ayuda.",
+        "h1": "Ayuda de la app de Canarito", "updated": "Última actualización: 17 de octubre de 2026.",
+        "intro": "Canarito hace sonar tu iPhone cuando el receptor de tu servidor recibe una alerta temprana de sismo. Es gratis, sin cuentas y sin compras.",
+        "sections": (
+            ("Vincular tu iPhone", (
+                "Necesitas un servidor de Canarito, tuyo o de alguien de confianza. Quien lo administra te da un QR o un enlace. Abre la app, escanea el QR o pega el enlace y toca Vincular.",
+            )),
+            ("Probar que funciona", (
+                "En Ajustes de la app, toca «Enviar aviso de prueba». En unos segundos llega una notificación de prueba.",
+            )),
+            ("Si no llegan avisos", (
+                "Revisa que las notificaciones de Canarito estén activas en los Ajustes del iPhone. Si la app dice que el servidor o el receptor no responden, avisa a quien administra tu servidor.",
+            )),
+            ("Contacto", (
+                "Escríbenos a bandada.team@gmail.com.",
+            )),
+        ),
+        "footer_left": "Canarito · código abierto, licencia MIT", "footer_right": "No es un sistema oficial de alertas.",
+    },
+    "en": {
+        "path": "en/support/index.html", "home": "/en/", "other": "/support/", "other_label": "Español", "other_lang": "es", "locale": "en_US",
+        "title": "Canarito support", "description": "How to link the Canarito app, test an alert and get help.",
+        "h1": "Canarito app support", "updated": "Last updated: 17 October 2026.",
+        "intro": "Canarito sounds your iPhone when your server's receptor gets an earthquake early warning. It is free, with no accounts and no purchases.",
+        "sections": (
+            ("Link your iPhone", (
+                "You need a Canarito server, your own or one run by someone you trust. Whoever runs it gives you a QR code or a link. Open the app, scan the QR or paste the link, and tap Link.",
+            )),
+            ("Test that it works", (
+                "In the app's Settings, tap \"Send a test alert\". A test notification arrives in a few seconds.",
+            )),
+            ("If alerts do not arrive", (
+                "Check that notifications for Canarito are on in the iPhone Settings. If the app says the server or the receptor is not responding, tell whoever runs your server.",
+            )),
+            ("Contact", (
+                "Write to bandada.team@gmail.com.",
+            )),
+        ),
+        "footer_left": "Canarito · open source, MIT license", "footer_right": "Not an official alert system.",
+    },
+}
+
+
 def privacy_page(lang, t):
     body = "".join(f"<h2>{escape(heading)}</h2>" + "".join(f"<p>{escape(paragraph)}</p>" for paragraph in paragraphs)
                    for heading, paragraphs in t["sections"])
@@ -323,7 +369,7 @@ if __name__ == "__main__":
         target = PUBLIC / strings["path"]
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(page(lang, strings))
-    for lang, strings in PRIVACY.items():
+    for lang, strings in [*PRIVACY.items(), *SUPPORT.items()]:
         target = PUBLIC / strings["path"]
         target.parent.mkdir(parents=True, exist_ok=True)
         target.write_text(privacy_page(lang, strings))
