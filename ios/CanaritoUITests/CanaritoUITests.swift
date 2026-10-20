@@ -9,6 +9,21 @@ final class PairingFlowUITests: XCTestCase {
     /// First run on a clean install: intro, the system prompts, paste a link, confirm, covered.
     /// Run after `xcrun simctl uninstall <udid> app.canarito`.
     func testFirstRunToCoveredWithAPastedLink() throws {
+        let app = try firstRunAndPair(allowingNotifications: true)
+        XCTAssertTrue(app.staticTexts["Avisos activos"].waitForExistence(timeout: 10), "not covered after pairing")
+        attach(app, "paired-covered")
+    }
+
+    /// Guideline 4.5.4 (App Review, 20 Oct 2026): notifications are optional. Saying no still pairs, and home
+    /// shows a calm notice with a way to turn them on, not an error. Run after a clean install.
+    func testFirstRunWithoutNotificationsStillPairs() throws {
+        let app = try firstRunAndPair(allowingNotifications: false)
+        XCTAssertTrue(app.staticTexts["Notificaciones apagadas"].waitForExistence(timeout: 10), "no notice for notifications off")
+        XCTAssertTrue(app.buttons["action"].exists, "no way to turn notifications on")
+        attach(app, "paired-notifications-off")
+    }
+
+    private func firstRunAndPair(allowingNotifications: Bool) throws -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments += ["-fakeGateway", "YES", "-fakeToken", "YES", "-AppleLanguages", "(es)"]
         app.launch()
@@ -21,9 +36,17 @@ final class PairingFlowUITests: XCTestCase {
             next.tap()
         }
         let allow = ["Allow", "Permitir", "Allow While Using App", "Permitir al usar la app", "Keep Only While Using", "Mantener solo al usar la app"]
+        let deny = ["Don’t Allow", "Don't Allow", "No permitir"]
+        // The notification prompt comes first, so it is the one refused when asked to.
+        var refuseNext = !allowingNotifications
         for _ in 0..<12 where !app.textFields["pairLink"].waitForExistence(timeout: 3) {
             let alert = springboard.alerts.firstMatch
-            if alert.exists, let button = alert.buttons.allElementsBoundByIndex.first(where: { allow.contains($0.label) }) { button.tap() }
+            guard alert.exists else { continue }
+            let labels = refuseNext ? deny : allow
+            if let button = alert.buttons.allElementsBoundByIndex.first(where: { labels.contains($0.label) }) {
+                button.tap()
+                refuseNext = false
+            }
         }
 
         let field = app.textFields["pairLink"]
@@ -35,10 +58,9 @@ final class PairingFlowUITests: XCTestCase {
         XCTAssertTrue(pair.waitForExistence(timeout: 5), "no confirmation before the secret is spent")
         pair.tap()
 
-        let state = app.otherElements["state"].firstMatch
-        XCTAssertTrue(state.waitForExistence(timeout: 20) || app.staticTexts["Avisos activos"].waitForExistence(timeout: 5), "home not shown")
-        XCTAssertTrue(app.staticTexts["Avisos activos"].waitForExistence(timeout: 10), "not covered after pairing")
-        attach(app, "paired-covered")
+        let state = app.descendants(matching: .any)["state"].firstMatch
+        XCTAssertTrue(state.waitForExistence(timeout: 20), "home not shown")
+        return app
     }
 
     /// P0 of build 3: tapping a push banner crashed the app. A shell loop sends the server's test push
@@ -74,6 +96,7 @@ final class AccessibilityAuditUITests: XCTestCase {
 
     func testCovered() throws { try audit("covered", wait: "state") }
     func testUnreachable() throws { try audit("unreachable", wait: "action") }
+    func testNotificationsOff() throws { try audit("notifications-off", wait: "action") }
     func testTravelWarning() throws { try audit("travel-warning", wait: "travelWarningButton") }
     func testAlert() throws { try audit("alert", wait: "close") }
     func testLateAlert() throws { try audit("alert-late", wait: "lateTag") }

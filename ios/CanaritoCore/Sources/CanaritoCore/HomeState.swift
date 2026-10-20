@@ -81,7 +81,6 @@ extension HomeState {
         guard inputs.pairing != nil, inputs.notifications != .notDetermined, inputs.location != .notDetermined
         else { return .notSetUp }
         if inputs.status == .notPaired { return .error(.removedByServer) }
-        if inputs.notifications == .denied { return .error(.notificationsOff) }
         if inputs.location == .denied { return .error(.locationOff) }
         if inputs.registration == .pending { return .error(.notRegistered) }
 
@@ -93,6 +92,9 @@ extension HomeState {
             if !status.relayOK { return .error(.relayDown) }
             if !status.receptorUp { return .error(.receptorDown) }
             if !status.covered { return .notCovered }
+            // Guideline 4.5.4: notifications are optional. With them off the app still shows the server's state;
+            // only an all-good server turns into this calm notice instead of a green one.
+            if inputs.notifications == .denied { return .error(.notificationsOff) }
             if !inputs.timeSensitiveOn { return .error(.timeSensitiveOff) }
             return .covered
         }

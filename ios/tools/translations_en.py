@@ -14,7 +14,8 @@ EN = {
     "Aviso tardío": "Late alert",
     "Avisos activos": "Alerts on",
     "Avisos de sismo de tu servidor, en tu iPhone.": "Earthquake alerts from your server, on your iPhone.",
-    "Avisos desactivados": "Alerts are off",
+    "Notificaciones apagadas": "Notifications are off",
+    "Activar notificaciones": "Turn on notifications",
     "Canarito no es un sistema oficial y puede fallar o llegar tarde. Si sientes un sismo, protégete aunque no suene nada.":
         "Canarito is not an official system and can fail or arrive late. If you feel an earthquake, protect yourself even if nothing sounds.",
     "Canarito no tiene permiso para usar la cámara. Actívalo en Ajustes o pega el enlace.":
@@ -26,8 +27,8 @@ EN = {
     "Comprueba tus avisos de sismo": "Check your earthquake alerts",
     "Con un modo de Concentración activo, el aviso puede llegar en silencio.": "With a Focus on, the alert may arrive silently.",
     "Continuar": "Continue",
-    "Cuando el receptor de tu servidor recibe una alerta temprana de sismo, tu iPhone suena.":
-        "When your server's receptor gets an earthquake early warning, your iPhone sounds.",
+    "Cuando el receptor de tu servidor recibe una alerta temprana de sismo, tu iPhone suena. Para eso te pide permiso de notificaciones: puedes decir que no y activarlo después.":
+        "When your server's receptor gets an earthquake early warning, your iPhone sounds. For that it asks to send you notifications: you can say no and turn them on later.",
     "Cuando pare el temblor": "When the shaking stops",
     "Cómo se usan tus datos": "How your data is used",
     "Dejarás de recibir avisos de este servidor.": "You will stop receiving alerts from this server.",
@@ -56,8 +57,8 @@ EN = {
     "Este código es de una versión más nueva. Actualiza la app.": "This code is from a newer version. Update the app.",
     "Apple no dejó registrar este iPhone para recibir avisos (%@). Revisa tu conexión y vuelve a intentarlo.":
         "Apple would not register this iPhone to receive alerts (%@). Check your connection and try again.",
-    "Este iPhone no pudo registrarse para recibir avisos. Revisa los permisos de notificaciones y tu conexión.":
-        "This iPhone could not register to receive alerts. Check notification permissions and your connection.",
+    "Este iPhone no pudo registrarse para recibir avisos. Revisa tu conexión y vuelve a intentarlo.":
+        "This iPhone could not register to receive alerts. Check your connection and try again.",
     "Falta tu ubicación": "Your location is missing",
     "Hablando con tu servidor.": "Talking to your server.",
     "Hace 8 días que Canarito no habla con tu servidor. Abre la app para comprobar que sigues cubierto.":
@@ -96,7 +97,8 @@ EN = {
     "Si viajas, Canarito no lo sabe": "If you travel, Canarito will not know",
     "Sin cobertura": "Not covered",
     "Sin cuentas": "No accounts",
-    "Sin permiso Canarito no puede avisarte.": "Without permission Canarito cannot alert you.",
+    "La app funciona, pero tu iPhone no sonará si hay un sismo. Puedes activarlas cuando quieras.":
+        "The app works, but your iPhone will not sound if there is an earthquake. You can turn them on at any time.",
     "Sin registro no te llegan avisos. Revisa tu conexión.": "Without registration no alerts reach you. Check your connection.",
     "Sin ubicación «Siempre», tu servidor sigue la zona donde abriste la app por última vez. Si cambias de ciudad, podrías no recibir los avisos de tu zona.":
         "Without location “Always”, your server follows the area where you last opened the app. If you change city, you may miss the alerts for your area.",

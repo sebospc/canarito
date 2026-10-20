@@ -31,6 +31,12 @@ final class HomeStateTests: XCTestCase {
         XCTAssertEqual(HomeState.derive(inputs(location: .notDetermined)), .notSetUp)
     }
 
+    func testNotificationsOffStillShowsTheServerState() {
+        XCTAssertEqual(HomeState.derive(inputs(notifications: .denied, status: .failed)), .error(.serverUnreachable))
+        XCTAssertEqual(HomeState.derive(inputs(notifications: .denied, status: .ok(status(covered: false), at: now))), .notCovered)
+        XCTAssertEqual(HomeState.derive(inputs(notifications: .denied)), .error(.notificationsOff))
+    }
+
     func testAnActiveAlertWinsOverEverything() {
         let live = alert(sentAgo: 5)
         XCTAssertEqual(HomeState.derive(inputs(pairing: .some(nil), status: .failed, alert: live)), .alert(live))

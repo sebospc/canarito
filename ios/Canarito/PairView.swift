@@ -78,7 +78,7 @@ struct PairView: View {
         case .malformed: "El código está incompleto. Genera otro en el servidor."
         case .badSecret: "El código ya se usó o venció. Genera otro con `canarito.py pair`."
         case .unreachable: "No llegamos al servidor. Revisa tu conexión y vuelve a intentarlo."
-        case .noPushToken: "Este iPhone no pudo registrarse para recibir avisos. Revisa los permisos de notificaciones y tu conexión."
+        case .noPushToken: "Este iPhone no pudo registrarse para recibir avisos. Revisa tu conexión y vuelve a intentarlo."
         case .pushRegistrationFailed(let reason): "Apple no dejó registrar este iPhone para recibir avisos (\(reason)). Revisa tu conexión y vuelve a intentarlo."
         case .other(let code): "El servidor rechazó la vinculación (\(code))."
         }

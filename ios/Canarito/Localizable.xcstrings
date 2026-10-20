@@ -69,6 +69,23 @@
         }
       }
     },
+    "Activar notificaciones": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Activar notificaciones"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Turn on notifications"
+          }
+        }
+      }
+    },
     "Ajustes": {
       "extractionState": "manual",
       "localizations": {
@@ -218,23 +235,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Earthquake alerts from your server, on your iPhone."
-          }
-        }
-      }
-    },
-    "Avisos desactivados": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Avisos desactivados"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Alerts are off"
           }
         }
       }
@@ -392,19 +392,19 @@
         }
       }
     },
-    "Cuando el receptor de tu servidor recibe una alerta temprana de sismo, tu iPhone suena.": {
+    "Cuando el receptor de tu servidor recibe una alerta temprana de sismo, tu iPhone suena. Para eso te pide permiso de notificaciones: puedes decir que no y activarlo después.": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Cuando el receptor de tu servidor recibe una alerta temprana de sismo, tu iPhone suena."
+            "value": "Cuando el receptor de tu servidor recibe una alerta temprana de sismo, tu iPhone suena. Para eso te pide permiso de notificaciones: puedes decir que no y activarlo después."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "When your server's receptor gets an earthquake early warning, your iPhone sounds."
+            "value": "When your server's receptor gets an earthquake early warning, your iPhone sounds. For that it asks to send you notifications: you can say no and turn them on later."
           }
         }
       }
@@ -800,19 +800,19 @@
         }
       }
     },
-    "Este iPhone no pudo registrarse para recibir avisos. Revisa los permisos de notificaciones y tu conexión.": {
+    "Este iPhone no pudo registrarse para recibir avisos. Revisa tu conexión y vuelve a intentarlo.": {
       "extractionState": "manual",
       "localizations": {
         "es": {
           "stringUnit": {
             "state": "translated",
-            "value": "Este iPhone no pudo registrarse para recibir avisos. Revisa los permisos de notificaciones y tu conexión."
+            "value": "Este iPhone no pudo registrarse para recibir avisos. Revisa tu conexión y vuelve a intentarlo."
           }
         },
         "en": {
           "stringUnit": {
             "state": "translated",
-            "value": "This iPhone could not register to receive alerts. Check notification permissions and your connection."
+            "value": "This iPhone could not register to receive alerts. Check your connection and try again."
           }
         }
       }
@@ -864,6 +864,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Canarito has not talked to your server for 8 days. Open the app to check that you are still covered."
+          }
+        }
+      }
+    },
+    "La app funciona, pero tu iPhone no sonará si hay un sismo. Puedes activarlas cuando quieras.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "La app funciona, pero tu iPhone no sonará si hay un sismo. Puedes activarlas cuando quieras."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "The app works, but your iPhone will not sound if there is an earthquake. You can turn them on at any time."
           }
         }
       }
@@ -1034,6 +1051,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "It could not be sent. Check your server."
+          }
+        }
+      }
+    },
+    "Notificaciones apagadas": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notificaciones apagadas"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Notifications are off"
           }
         }
       }
@@ -1374,23 +1408,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "No accounts"
-          }
-        }
-      }
-    },
-    "Sin permiso Canarito no puede avisarte.": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Sin permiso Canarito no puede avisarte."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Without permission Canarito cannot alert you."
           }
         }
       }

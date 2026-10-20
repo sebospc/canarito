@@ -151,8 +151,9 @@ private struct Look {
             // Shown by AlertView; kept for completeness.
             self.init(symbol: "exclamationmark.triangle.fill", tint: Brand.coral, title: "Aviso de sismo")
         case .error(.notificationsOff):
-            self.init(symbol: "bell.slash.fill", tint: Brand.coral, title: "Avisos desactivados",
-                      detail: "Sin permiso Canarito no puede avisarte.", action: .init(kind: .openSettings, title: "Abrir Ajustes"))
+            self.init(symbol: "bell.slash", tint: Brand.canary, title: "Notificaciones apagadas",
+                      detail: "La app funciona, pero tu iPhone no sonará si hay un sismo. Puedes activarlas cuando quieras.",
+                      action: .init(kind: .openSettings, title: "Activar notificaciones"))
         case .error(.timeSensitiveOff):
             self.init(symbol: "exclamationmark.triangle.fill", tint: Brand.canary, title: "Los avisos pueden no sonar",
                       detail: "Con un modo de Concentración activo, el aviso puede llegar en silencio.",
