@@ -40,7 +40,9 @@ const ALERT_SOUND = "canarito-alert.caf";
 
 function alertPayload(alert, critical) {
   const sound = alert.test === true ? "default" : ALERT_SOUND;
-  const aps = { alert: { title: alert.title, body: alert.body }, sound, "interruption-level": "time-sensitive" };
+  // content-available also hands the alert to the open app when notifications are off (guideline 4.5.4):
+  // iOS drops the banner then, but still wakes the app, which shows the alert screen itself.
+  const aps = { alert: { title: alert.title, body: alert.body }, sound, "interruption-level": "time-sensitive", "content-available": 1 };
   if (critical) {
     aps.sound = { critical: 1, name: sound, volume: 1.0 };
     aps["interruption-level"] = "critical";

@@ -5,13 +5,16 @@ runs. There is no account and no sign-in. The app has nothing to do until it is 
 server by scanning a QR code, so we provide a demo server.
 
 ## How to review
-1. Open the app and tap Continue. Allow notifications and location.
+1. Open the app and tap Continue. Notifications are optional: you can choose Don't Allow and the
+   app still links, shows the server's state and shows alerts while it is open. Allow location.
 2. Linking screen: scan the demo QR (attached image), or paste the demo link into the field and
    tap "Usar enlace" (es) / "Use link" (en). The QR and link come from the demo server, see
    "Demo server" below. They are private: never in the repo, never on a bead.
 3. Confirm the server name and tap Link. The home screen then says the alerts are on.
-4. Settings (gear icon) > "Enviar aviso de prueba" / "Send a test alert". The phone gets a test
-   push in a few seconds and the test alert screen shows.
+4. Settings (gear icon) > "Enviar aviso de prueba" / "Send a test alert". In a few seconds the test
+   alert screen shows and sounds. With notifications allowed it also arrives as a notification when
+   the app is closed. With them off, home reads "Alerts while the app is open" and has a card to turn
+   them on; nothing else is blocked.
 
 ## Notes
 - Location: "Always" is used so the user's server can keep the receptor near them when the

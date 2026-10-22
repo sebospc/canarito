@@ -19,12 +19,16 @@ struct RootView: View {
                     IntroView(model: model)
                 }
             } else {
-                HomeView(model: model, state: state, showsTravelWarning: Samples.state != nil ? Samples.showsTravelWarning : model.showsTravelWarning,
+                HomeView(model: model, state: state, locationNotice: Samples.state != nil ? Samples.locationNotice : model.locationNotice,
+                         showsNotificationsOff: Samples.state != nil ? Samples.showsNotificationsOff : model.notifications == .denied,
                          onShowSettings: { showingSettings = true })
             }
         }
         .animation(motion.stateChange, value: state)
         .sheet(isPresented: $showingSettings) { SettingsView(model: model) }
+        // An alert must not open behind Settings: the test alert is sent from there, and with notifications
+        // off there is no banner on top to see it by.
+        .onChange(of: state) { _, newState in if case .alert = newState { showingSettings = false } }
         // A sheet presented in the first frame is dropped by SwiftUI: wait one beat (screenshots only).
         .task { if Samples.opensSettings { try? await Task.sleep(for: .milliseconds(600)); showingSettings = true } }
         .background(Brand.page.ignoresSafeArea())

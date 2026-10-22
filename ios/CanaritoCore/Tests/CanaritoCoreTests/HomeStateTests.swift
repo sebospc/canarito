@@ -37,6 +37,12 @@ final class HomeStateTests: XCTestCase {
         XCTAssertEqual(HomeState.derive(inputs(notifications: .denied)), .error(.notificationsOff))
     }
 
+    /// Guideline 5.1.1: location is optional. A refusal shows the server's state, with a card (locationNotice).
+    func testLocationOffStillShowsTheServerState() {
+        XCTAssertEqual(HomeState.derive(inputs(location: .denied)), .covered)
+        XCTAssertEqual(HomeState.derive(inputs(location: .denied, status: .failed)), .error(.serverUnreachable))
+    }
+
     func testAnActiveAlertWinsOverEverything() {
         let live = alert(sentAgo: 5)
         XCTAssertEqual(HomeState.derive(inputs(pairing: .some(nil), status: .failed, alert: live)), .alert(live))
@@ -48,7 +54,6 @@ final class HomeStateTests: XCTestCase {
 
     func testEachProblemIsLoudNeverGreen() {
         XCTAssertEqual(HomeState.derive(inputs(notifications: .denied)), .error(.notificationsOff))
-        XCTAssertEqual(HomeState.derive(inputs(location: .denied)), .error(.locationOff))
         XCTAssertEqual(HomeState.derive(inputs(registration: .pending)), .error(.notRegistered))
         XCTAssertEqual(HomeState.derive(inputs(status: .failed)), .error(.serverUnreachable))
         XCTAssertEqual(HomeState.derive(inputs(status: .notPaired)), .error(.removedByServer))
@@ -71,11 +76,12 @@ final class HomeStateTests: XCTestCase {
         XCTAssertEqual(HomeState.derive(inputs(status: .ok(status(covered: false, relayOK: false), at: now))), .error(.relayDown))
     }
 
-    func testTravelWarningOnlyWithWhileUsingAndAFollowingReceptor() {
+    func testLocationNoticeOnlyForAFollowingReceptor() {
         let following = StatusOutcome.ok(status(), at: now)
-        XCTAssertTrue(HomeState.showsTravelWarning(location: .whileUsing, status: following))
-        XCTAssertFalse(HomeState.showsTravelWarning(location: .always, status: following))
-        XCTAssertFalse(HomeState.showsTravelWarning(location: .whileUsing, status: .ok(status(following: false), at: now)))
-        XCTAssertFalse(HomeState.showsTravelWarning(location: .whileUsing, status: .failed))
+        XCTAssertEqual(HomeState.locationNotice(location: .whileUsing, status: following), .travel)
+        XCTAssertEqual(HomeState.locationNotice(location: .denied, status: following), .off)
+        XCTAssertNil(HomeState.locationNotice(location: .always, status: following))
+        XCTAssertNil(HomeState.locationNotice(location: .denied, status: .ok(status(following: false), at: now)), "a fixed receptor needs no position")
+        XCTAssertNil(HomeState.locationNotice(location: .whileUsing, status: .failed))
     }
 }

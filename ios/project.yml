@@ -14,7 +14,7 @@ settings:
     LOCALIZATION_PREFERS_STRING_CATALOGS: YES
     MARKETING_VERSION: "0.1"
     # Raise on every TestFlight upload: App Store Connect refuses a build number it has seen.
-    CURRENT_PROJECT_VERSION: "6"
+    CURRENT_PROJECT_VERSION: "7"
     # The one place to change the bundle id. The relay's APNs topic must be the same value.
     APP_BUNDLE_ID: app.canarito
     # The owner's Apple team id (App Store Connect, Membership).
@@ -47,7 +47,7 @@ targets:
         INFOPLIST_KEY_UISupportedInterfaceOrientations: UIInterfaceOrientationPortrait
         TARGETED_DEVICE_FAMILY: "1"
         INFOPLIST_KEY_UILaunchScreen_Generation: true
-        INFOPLIST_KEY_UIBackgroundModes: location fetch
+        INFOPLIST_KEY_UIBackgroundModes: location fetch remote-notification
         INFOPLIST_KEY_NSLocationWhenInUseUsageDescription: "Canarito usa tu ubicación para que tu servidor ponga el receptor de sismos donde estás. Solo envía una posición redondeada a 1 km."
         INFOPLIST_KEY_NSLocationAlwaysAndWhenInUseUsageDescription: "Para mover tu receptor cuando viajas, aunque la app esté cerrada. Solo se envía una posición redondeada a 1 km, cuando te mueves."
         INFOPLIST_KEY_NSCameraUsageDescription: "La cámara lee el código QR que muestra tu servidor para vincular este iPhone."

@@ -90,7 +90,7 @@ final class AppModel {
         return .registered
     }
 
-    var showsTravelWarning: Bool { HomeState.showsTravelWarning(location: locationAccess, status: status) }
+    var locationNotice: LocationNotice? { HomeState.locationNotice(location: locationAccess, status: status) }
     var deviceKey: String? { secrets.secret(forKey: Key.deviceKey) }
 
     // MARK: lifecycle

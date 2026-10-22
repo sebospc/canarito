@@ -23,7 +23,7 @@ enum Samples {
 
     static var state: HomeState? {
         switch name {
-        case "covered", "travel-warning": .covered
+        case "covered", "travel-warning", "location-off": .covered
         case "not-covered": .notCovered
         case "checking": .checking
         case "alert", "after": .alert(sampleAlert)
@@ -40,7 +40,6 @@ enum Samples {
         case "receptor-down": .error(.receptorDown)
         case "notifications-off": .error(.notificationsOff)
         case "time-sensitive-off": .error(.timeSensitiveOff)
-        case "location-off": .error(.locationOff)
         case "not-registered": .error(.notRegistered)
         case "removed": .error(.removedByServer)
         default: nil
@@ -56,7 +55,14 @@ enum Samples {
     }
 
     static var startsOnAfterScreen: Bool { name == "after" }
-    static var showsTravelWarning: Bool { name == "travel-warning" }
+    static var locationNotice: LocationNotice? {
+        switch name {
+        case "travel-warning": .travel
+        case "location-off": .off
+        default: nil
+        }
+    }
+    static var showsNotificationsOff: Bool { name == "notifications-off" }
     static var opensSettings: Bool { UserDefaults.standard.string(forKey: "sheet") == "settings" }
     static var pairing: Pairing? {
         name == nil ? nil : Pairing(server: URL(string: "https://canarito.example.org")!, relay: URL(string: "https://relay.example.org")!,
@@ -68,7 +74,8 @@ enum Samples {
     static let state: HomeState? = nil
     static let showsSetup: Setup? = nil
     static let startsOnAfterScreen = false
-    static let showsTravelWarning = false
+    static let locationNotice: LocationNotice? = nil
+    static let showsNotificationsOff = false
     static let opensSettings = false
     static let pairing: Pairing? = nil
     #endif

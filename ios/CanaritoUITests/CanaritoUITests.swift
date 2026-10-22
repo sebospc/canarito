@@ -14,16 +14,38 @@ final class PairingFlowUITests: XCTestCase {
         attach(app, "paired-covered")
     }
 
-    /// Guideline 4.5.4 (App Review, 20 Oct 2026): notifications are optional. Saying no still pairs, and home
-    /// shows a calm notice with a way to turn them on, not an error. Run after a clean install.
+    /// Guideline 4.5.4 (App Review, 20 and 22 Oct 2026): notifications are optional. Saying no still pairs, and
+    /// home shows the server's state with a card to turn them on, never a button that takes over the screen.
+    /// Run after a clean install.
     func testFirstRunWithoutNotificationsStillPairs() throws {
         let app = try firstRunAndPair(allowingNotifications: false)
-        XCTAssertTrue(app.staticTexts["Notificaciones apagadas"].waitForExistence(timeout: 10), "no notice for notifications off")
-        XCTAssertTrue(app.buttons["action"].exists, "no way to turn notifications on")
+        XCTAssertTrue(app.staticTexts["Avisos con la app abierta"].waitForExistence(timeout: 10), "home does not show the server's state")
+        XCTAssertTrue(app.buttons["notificationsButton"].exists, "no way to turn notifications on")
+        XCTAssertFalse(app.buttons["action"].exists, "notifications off must not pin a button over home")
         attach(app, "paired-notifications-off")
     }
 
-    private func firstRunAndPair(allowingNotifications: Bool) throws -> XCUIApplication {
+    /// Guideline 4.5.4: with notifications off the open app still shows the alert. A shell loop sends the
+    /// server's test push (`xcrun simctl push`, with content-available) while this waits on the home screen.
+    func testWithoutNotificationsTheOpenAppStillShowsTheAlert() throws {
+        try testFirstRunWithoutNotificationsStillPairs()
+        let app = XCUIApplication()
+        XCTAssertTrue(app.buttons["close"].waitForExistence(timeout: 90), "no alert screen: send the push while this runs")
+        attach(app, "alert-with-notifications-off")
+    }
+
+    /// Guideline 5.1.1: location is optional too. Refusing every prompt still pairs and shows the server's state,
+    /// with a card for each permission that is off. Run after a clean install.
+    func testFirstRunRefusingEverythingStillPairs() throws {
+        let app = try firstRunAndPair(allowingNotifications: false, allowingLocation: false)
+        XCTAssertTrue(app.staticTexts["Avisos con la app abierta"].waitForExistence(timeout: 10), "home does not show the server's state")
+        XCTAssertTrue(app.buttons["notificationsButton"].exists, "no way to turn notifications on")
+        XCTAssertTrue(app.buttons["locationButton"].exists, "no way to turn location on")
+        XCTAssertFalse(app.buttons["action"].exists, "a refused permission must not pin a button over home")
+        attach(app, "paired-refusing-everything")
+    }
+
+    private func firstRunAndPair(allowingNotifications: Bool, allowingLocation: Bool = true) throws -> XCUIApplication {
         let app = XCUIApplication()
         app.launchArguments += ["-fakeGateway", "YES", "-fakeToken", "YES", "-AppleLanguages", "(es)"]
         app.launch()
@@ -37,7 +59,7 @@ final class PairingFlowUITests: XCTestCase {
         }
         let allow = ["Allow", "Permitir", "Allow While Using App", "Permitir al usar la app", "Keep Only While Using", "Mantener solo al usar la app"]
         let deny = ["Don’t Allow", "Don't Allow", "No permitir"]
-        // The notification prompt comes first, so it is the one refused when asked to.
+        // The notification prompt comes first, then location: refusing location refuses every prompt after it.
         var refuseNext = !allowingNotifications
         for _ in 0..<12 where !app.textFields["pairLink"].waitForExistence(timeout: 3) {
             let alert = springboard.alerts.firstMatch
@@ -45,7 +67,7 @@ final class PairingFlowUITests: XCTestCase {
             let labels = refuseNext ? deny : allow
             if let button = alert.buttons.allElementsBoundByIndex.first(where: { labels.contains($0.label) }) {
                 button.tap()
-                refuseNext = false
+                refuseNext = !allowingLocation
             }
         }
 
@@ -96,8 +118,9 @@ final class AccessibilityAuditUITests: XCTestCase {
 
     func testCovered() throws { try audit("covered", wait: "state") }
     func testUnreachable() throws { try audit("unreachable", wait: "action") }
-    func testNotificationsOff() throws { try audit("notifications-off", wait: "action") }
+    func testNotificationsOff() throws { try audit("notifications-off", wait: "notificationsButton") }
     func testTravelWarning() throws { try audit("travel-warning", wait: "travelWarningButton") }
+    func testLocationOff() throws { try audit("location-off", wait: "locationButton") }
     func testAlert() throws { try audit("alert", wait: "close") }
     func testLateAlert() throws { try audit("alert-late", wait: "lateTag") }
     func testDrillAlert() throws { try audit("alert-drill", wait: "drillBand") }

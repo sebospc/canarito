@@ -222,6 +222,23 @@
         }
       }
     },
+    "Avisos con la app abierta": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Avisos con la app abierta"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Alerts while the app is open"
+          }
+        }
+      }
+    },
     "Avisos de sismo de tu servidor, en tu iPhone.": {
       "extractionState": "manual",
       "localizations": {
@@ -354,6 +371,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Check your earthquake alerts"
+          }
+        }
+      }
+    },
+    "Con la app cerrada no sonará": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Con la app cerrada no sonará"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "It will not sound with the app closed"
           }
         }
       }
@@ -817,23 +851,6 @@
         }
       }
     },
-    "Falta tu ubicación": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Falta tu ubicación"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your location is missing"
-          }
-        }
-      }
-    },
     "Hablando con tu servidor.": {
       "extractionState": "manual",
       "localizations": {
@@ -864,23 +881,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "Canarito has not talked to your server for 8 days. Open the app to check that you are still covered."
-          }
-        }
-      }
-    },
-    "La app funciona, pero tu iPhone no sonará si hay un sismo. Puedes activarlas cuando quieras.": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "La app funciona, pero tu iPhone no sonará si hay un sismo. Puedes activarlas cuando quieras."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "The app works, but your iPhone will not sound if there is an earthquake. You can turn them on at any time."
           }
         }
       }
@@ -1055,23 +1055,6 @@
         }
       }
     },
-    "Notificaciones apagadas": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notificaciones apagadas"
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Notifications are off"
-          }
-        }
-      }
-    },
     "Ocurrió hace %lld min": {
       "extractionState": "manual",
       "localizations": {
@@ -1119,6 +1102,40 @@
           "stringUnit": {
             "state": "translated",
             "value": "So the receptor is where you are, Canarito sends your server your position rounded to 1 km, only when you move. Your exact position does not leave the iPhone."
+          }
+        }
+      }
+    },
+    "Para que tu iPhone suene aunque no tengas Canarito abierto, activa las notificaciones.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Para que tu iPhone suene aunque no tengas Canarito abierto, activa las notificaciones."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "To make your iPhone sound when Canarito is not open, turn on notifications."
+          }
+        }
+      }
+    },
+    "Permitir ubicación": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Permitir ubicación"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Allow location"
           }
         }
       }
@@ -1429,6 +1446,23 @@
         }
       }
     },
+    "Sin tu ubicación, el receptor se queda donde está. Si estás en otro lugar, podrías no recibir los avisos de tu zona.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Sin tu ubicación, el receptor se queda donde está. Si estás en otro lugar, podrías no recibir los avisos de tu zona."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Without your location, the receptor stays where it is. If you are somewhere else, you might not get the alerts for your area."
+          }
+        }
+      }
+    },
     "Sin ubicación «Siempre», tu servidor sigue la zona donde abriste la app por última vez. Si cambias de ciudad, podrías no recibir los avisos de tu zona.": {
       "extractionState": "manual",
       "localizations": {
@@ -1514,6 +1548,23 @@
         }
       }
     },
+    "Te cubre el receptor «%@». Mientras Canarito esté abierto, aquí verás y oirás los avisos.": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Te cubre el receptor «%@». Mientras Canarito esté abierto, aquí verás y oirás los avisos."
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Receptor “%@” covers you. While Canarito is open, you will see and hear alerts here."
+          }
+        }
+      }
+    },
     "Te llega un aviso de prueba para que escuches cómo suena.": {
       "extractionState": "manual",
       "localizations": {
@@ -1582,23 +1633,6 @@
         }
       }
     },
-    "Tu servidor la usa, redondeada a 1 km, para poner el receptor donde estás. Sin ella no sabemos si te cubre.": {
-      "extractionState": "manual",
-      "localizations": {
-        "es": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Tu servidor la usa, redondeada a 1 km, para poner el receptor donde estás. Sin ella no sabemos si te cubre."
-          }
-        },
-        "en": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "Your server uses it, rounded to 1 km, to put the receptor where you are. Without it we cannot tell if you are covered."
-          }
-        }
-      }
-    },
     "Tu servidor no logra enviar avisos a tu iPhone. Avisa a quien lo administra.": {
       "extractionState": "manual",
       "localizations": {
@@ -1612,6 +1646,23 @@
           "stringUnit": {
             "state": "translated",
             "value": "Your server cannot send alerts to your iPhone. Tell whoever runs it."
+          }
+        }
+      }
+    },
+    "Tu servidor no sabe dónde estás": {
+      "extractionState": "manual",
+      "localizations": {
+        "es": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Tu servidor no sabe dónde estás"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Your server does not know where you are"
           }
         }
       }

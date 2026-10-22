@@ -14,7 +14,6 @@ EN = {
     "Aviso tardío": "Late alert",
     "Avisos activos": "Alerts on",
     "Avisos de sismo de tu servidor, en tu iPhone.": "Earthquake alerts from your server, on your iPhone.",
-    "Notificaciones apagadas": "Notifications are off",
     "Activar notificaciones": "Turn on notifications",
     "Canarito no es un sistema oficial y puede fallar o llegar tarde. Si sientes un sismo, protégete aunque no suene nada.":
         "Canarito is not an official system and can fail or arrive late. If you feel an earthquake, protect yourself even if nothing sounds.",
@@ -59,7 +58,6 @@ EN = {
         "Apple would not register this iPhone to receive alerts (%@). Check your connection and try again.",
     "Este iPhone no pudo registrarse para recibir avisos. Revisa tu conexión y vuelve a intentarlo.":
         "This iPhone could not register to receive alerts. Check your connection and try again.",
-    "Falta tu ubicación": "Your location is missing",
     "Hablando con tu servidor.": "Talking to your server.",
     "Hace 8 días que Canarito no habla con tu servidor. Abre la app para comprobar que sigues cubierto.":
         "Canarito has not talked to your server for 8 days. Open the app to check that you are still covered.",
@@ -97,8 +95,6 @@ EN = {
     "Si viajas, Canarito no lo sabe": "If you travel, Canarito will not know",
     "Sin cobertura": "Not covered",
     "Sin cuentas": "No accounts",
-    "La app funciona, pero tu iPhone no sonará si hay un sismo. Puedes activarlas cuando quieras.":
-        "The app works, but your iPhone will not sound if there is an earthquake. You can turn them on at any time.",
     "Sin registro no te llegan avisos. Revisa tu conexión.": "Without registration no alerts reach you. Check your connection.",
     "Sin ubicación «Siempre», tu servidor sigue la zona donde abriste la app por última vez. Si cambias de ciudad, podrías no recibir los avisos de tu zona.":
         "Without location “Always”, your server follows the area where you last opened the app. If you change city, you may miss the alerts for your area.",
@@ -107,12 +103,20 @@ EN = {
     "Suena cuando hay un sismo": "Sounds when there is an earthquake",
     "Te cubre": "Covered",
     "Te cubre el receptor «%@».": "Receptor “%@” covers you.",
+    "Te cubre el receptor «%@». Mientras Canarito esté abierto, aquí verás y oirás los avisos.":
+        "Receptor “%@” covers you. While Canarito is open, you will see and hear alerts here.",
+    "Avisos con la app abierta": "Alerts while the app is open",
+    "Tu servidor no sabe dónde estás": "Your server does not know where you are",
+    "Sin tu ubicación, el receptor se queda donde está. Si estás en otro lugar, podrías no recibir los avisos de tu zona.":
+        "Without your location, the receptor stays where it is. If you are somewhere else, you might not get the alerts for your area.",
+    "Permitir ubicación": "Allow location",
+    "Con la app cerrada no sonará": "It will not sound with the app closed",
+    "Para que tu iPhone suene aunque no tengas Canarito abierto, activa las notificaciones.":
+        "To make your iPhone sound when Canarito is not open, turn on notifications.",
     "Te llega un aviso de prueba para que escuches cómo suena.": "You get a test alert so you can hear how it sounds.",
     "Tu iPhone aún no está registrado": "Your iPhone is not registered yet",
     "Tu receptor no responde": "Your receptor is not answering",
     "Tu servidor": "Your server",
-    "Tu servidor la usa, redondeada a 1 km, para poner el receptor donde estás. Sin ella no sabemos si te cubre.":
-        "Your server uses it, rounded to 1 km, to put the receptor where you are. Without it we cannot tell if you are covered.",
     "Tu servidor no logra enviar avisos a tu iPhone. Avisa a quien lo administra.": "Your server cannot send alerts to your iPhone. Tell whoever runs it.",
     "Tu servidor ya no te conoce": "Your server no longer knows you",
     "Tu zona no tiene cobertura": "Your area is not covered",

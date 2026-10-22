@@ -36,7 +36,6 @@ public enum HomeState: Equatable, Sendable {
         case notificationsOff
         /// Alerts arrive, but a Focus may silence them.
         case timeSensitiveOff
-        case locationOff
         /// The server has not accepted the push handle: no alert can reach this phone.
         case notRegistered
         case serverUnreachable
@@ -45,6 +44,13 @@ public enum HomeState: Equatable, Sendable {
         /// The server forgot this phone.
         case removedByServer
     }
+}
+
+public enum LocationNotice: Equatable, Sendable {
+    /// "While using": the receptor follows the area of the last app open, not the person.
+    case travel
+    /// Refused: the receptor stays where it is.
+    case off
 }
 
 public struct HomeInputs: Sendable {
@@ -81,7 +87,6 @@ extension HomeState {
         guard inputs.pairing != nil, inputs.notifications != .notDetermined, inputs.location != .notDetermined
         else { return .notSetUp }
         if inputs.status == .notPaired { return .error(.removedByServer) }
-        if inputs.location == .denied { return .error(.locationOff) }
         if inputs.registration == .pending { return .error(.notRegistered) }
 
         switch inputs.status {
@@ -100,10 +105,14 @@ extension HomeState {
         }
     }
 
-    /// With location "While using" only, the phone follows the area of the last app open, not the
-    /// person. Shown under any state where a following receptor matters.
-    public static func showsTravelWarning(location: LocationAccess, status: StatusOutcome) -> Bool {
-        guard location == .whileUsing, case .ok(let status, _) = status else { return false }
-        return status.following
+    /// A card under any state, only where a receptor that follows the phone needs its position. Guideline
+    /// 5.1.1: location is optional, so a refusal never takes over home.
+    public static func locationNotice(location: LocationAccess, status: StatusOutcome) -> LocationNotice? {
+        guard case .ok(let status, _) = status, status.following else { return nil }
+        return switch location {
+        case .whileUsing: .travel
+        case .denied: .off
+        case .notDetermined, .always: nil
+        }
     }
 }

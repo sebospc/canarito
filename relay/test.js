@@ -68,6 +68,7 @@ test("a paired phone gets the alert with the contract payload and a signed JWT",
   assert.strictEqual(sent.headers["apns-expiration"], String(NOW / 1000 + 180));
   assert.strictEqual(sent.body.aps.alert.title, "Alerta de sismo");
   assert.strictEqual(sent.body.aps["interruption-level"], "time-sensitive");
+  assert.strictEqual(sent.body.aps["content-available"], 1, "the open app must get the alert with notifications off");
   assert.strictEqual(sent.body.canarito.id, "evt1");
   const [head, claims, signature] = sent.headers.authorization.replace("bearer ", "").split(".");
   assert.deepStrictEqual(JSON.parse(Buffer.from(head, "base64url")), { alg: "ES256", kid: "KEY1234567" });

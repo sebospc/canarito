@@ -5,7 +5,8 @@ import SwiftUI
 struct HomeView: View {
     let model: AppModel
     let state: HomeState
-    let showsTravelWarning: Bool
+    let locationNotice: LocationNotice?
+    let showsNotificationsOff: Bool
     let onShowSettings: () -> Void
 
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
@@ -38,7 +39,8 @@ struct HomeView: View {
                         .accessibilityIdentifier("state")
                         if let action = look.action, dynamicTypeSize.isAccessibilitySize { actionButton(action).padding(.top, 8) }
                         if let pairing = model.pairing ?? Samples.pairing { serverCard(pairing) }
-                        if showsTravelWarning { travelWarning }
+                        if showsNotificationsOff { notificationsOffCard }
+                        if let locationNotice { locationCard(locationNotice) }
                     }
                     .multilineTextAlignment(.center)
                     .frame(maxWidth: .infinity, minHeight: 480)
@@ -90,15 +92,42 @@ struct HomeView: View {
         .accessibilityIdentifier("serverCard")
     }
 
-    private var travelWarning: some View {
+    @ViewBuilder private func locationCard(_ notice: LocationNotice) -> some View {
         Card {
-            Text("Si viajas, Canarito no lo sabe").font(.headline)
-            Text("Sin ubicación «Siempre», tu servidor sigue la zona donde abriste la app por última vez. Si cambias de ciudad, podrías no recibir los avisos de tu zona.")
-                .font(.subheadline)
-            Button("Permitir ubicación «Siempre»") { openSettings() }
+            switch notice {
+            case .travel:
+                Text("Si viajas, Canarito no lo sabe").font(.headline)
+                Text("Sin ubicación «Siempre», tu servidor sigue la zona donde abriste la app por última vez. Si cambias de ciudad, podrías no recibir los avisos de tu zona.")
+                    .font(.subheadline)
+                Button("Permitir ubicación «Siempre»") { openSettings() }
+                    .buttonStyle(.canaritoOutlined(Brand.accent))
+                    .padding(.top, 4)
+                    .accessibilityIdentifier("travelWarningButton")
+            case .off:
+                Text("Tu servidor no sabe dónde estás").font(.headline)
+                Text("Sin tu ubicación, el receptor se queda donde está. Si estás en otro lugar, podrías no recibir los avisos de tu zona.")
+                    .font(.subheadline)
+                    .fixedSize(horizontal: false, vertical: true)
+                Button("Permitir ubicación") { openSettings() }
+                    .buttonStyle(.canaritoOutlined(Brand.accent))
+                    .padding(.top, 4)
+                    .accessibilityIdentifier("locationButton")
+            }
+        }
+        .multilineTextAlignment(.leading)
+        .padding(.top, 8)
+    }
+
+    /// Guideline 4.5.4: a card under the state, never a button that takes over home. The app still works open.
+    private var notificationsOffCard: some View {
+        Card {
+            Text("Con la app cerrada no sonará").font(.headline)
+            Text("Para que tu iPhone suene aunque no tengas Canarito abierto, activa las notificaciones.").font(.subheadline)
+                .fixedSize(horizontal: false, vertical: true)
+            Button("Activar notificaciones") { openSettings() }
                 .buttonStyle(.canaritoOutlined(Brand.accent))
                 .padding(.top, 4)
-                .accessibilityIdentifier("travelWarningButton")
+                .accessibilityIdentifier("notificationsButton")
         }
         .multilineTextAlignment(.leading)
         .padding(.top, 8)
@@ -151,16 +180,11 @@ private struct Look {
             // Shown by AlertView; kept for completeness.
             self.init(symbol: "exclamationmark.triangle.fill", tint: Brand.coral, title: "Aviso de sismo")
         case .error(.notificationsOff):
-            self.init(symbol: "bell.slash", tint: Brand.canary, title: "Notificaciones apagadas",
-                      detail: "La app funciona, pero tu iPhone no sonará si hay un sismo. Puedes activarlas cuando quieras.",
-                      action: .init(kind: .openSettings, title: "Activar notificaciones"))
+            self.init(symbol: "checkmark.shield", tint: Brand.canary, title: "Avisos con la app abierta",
+                      detail: "Te cubre el receptor «\(receptor ?? "")». Mientras Canarito esté abierto, aquí verás y oirás los avisos.")
         case .error(.timeSensitiveOff):
             self.init(symbol: "exclamationmark.triangle.fill", tint: Brand.canary, title: "Los avisos pueden no sonar",
                       detail: "Con un modo de Concentración activo, el aviso puede llegar en silencio.",
-                      action: .init(kind: .openSettings, title: "Abrir Ajustes"))
-        case .error(.locationOff):
-            self.init(symbol: "location.slash.fill", tint: Brand.coral, title: "Falta tu ubicación",
-                      detail: "Tu servidor la usa, redondeada a 1 km, para poner el receptor donde estás. Sin ella no sabemos si te cubre.",
                       action: .init(kind: .openSettings, title: "Abrir Ajustes"))
         case .error(.notRegistered):
             self.init(symbol: "wifi.exclamationmark", tint: Brand.coral, title: "Tu iPhone aún no está registrado",

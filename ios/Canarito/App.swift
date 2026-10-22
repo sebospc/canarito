@@ -54,6 +54,18 @@ final class AppDelegate: NSObject, UIApplicationDelegate, UNUserNotificationCent
         MainActor.assumeIsolated { model.tokenFailed(error) }
     }
 
+    /// Guideline 4.5.4: with notifications off iOS shows no banner and skips `willPresent`, but the push's
+    /// content-available still lands here, so the open app shows and sounds the alert anyway. With them on,
+    /// `willPresent` sees the same alert id and stays quiet.
+    func application(_ application: UIApplication, didReceiveRemoteNotification userInfo: [AnyHashable: Any],
+                     fetchCompletionHandler completionHandler: @escaping (UIBackgroundFetchResult) -> Void) {
+        MainActor.assumeIsolated {
+            guard let alert = EarthquakeAlert(userInfo: userInfo) else { return completionHandler(.noData) }
+            _ = model.received(alert)
+            completionHandler(.newData)
+        }
+    }
+
     // The completion-handler forms on purpose: build 3 used the `async` forms, and iOS ran their generated
     // thunk off the main thread, where it touched UIApplication and aborted on tapping a push.
     /// In the foreground the app shows the alert screen itself; a repeat of the same alert id stays silent.
