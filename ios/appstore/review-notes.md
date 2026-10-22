@@ -5,22 +5,28 @@ runs. There is no account and no sign-in. The app has nothing to do until it is 
 server by scanning a QR code, so we provide a demo server.
 
 ## How to review
-1. Open the app and tap Continue. Notifications are optional: you can choose Don't Allow and the
-   app still links, shows the server's state and shows alerts while it is open. Allow location.
-2. Linking screen: scan the demo QR (attached image), or paste the demo link into the field and
-   tap "Usar enlace" (es) / "Use link" (en). The QR and link come from the demo server, see
-   "Demo server" below. They are private: never in the repo, never on a bead.
-3. Confirm the server name and tap Link. The home screen then says the alerts are on.
-4. Settings (gear icon) > "Enviar aviso de prueba" / "Send a test alert". In a few seconds the test
-   alert screen shows and sounds. With notifications allowed it also arrives as a notification when
-   the app is closed. With them off, home reads "Alerts while the app is open" and has a card to turn
-   them on; nothing else is blocked.
+1. Open the app and tap Continue. Notifications and location are optional: you can choose Don't Allow
+   for both and the app still works.
+2. Linking screen: scan the attached demo QR, or paste the demo link into the field and tap "Use link"
+   ("Usar enlace" in Spanish). The QR and link come from the demo server, see "Demo server" below.
+3. Confirm the server name and tap Link. Home shows the server's state.
+4. Open Settings (gear icon) and tap "Send a test alert". In a few seconds the test alert screen opens in
+   the app and sounds.
+
+## With notifications off
+- The app links, shows the server's state and shows alerts while it is open, as in step 4.
+- Home reads "Alerts while the app is open" and has a small card with a button to turn notifications on
+  in Settings. Nothing is blocked and the app does not ask again.
+- With notifications on, alerts also arrive when the app is closed.
+
+## With location off
+- The app works the same. If the user's receptor follows their phone, home shows a small card saying the
+  server does not know where they are, with a button to allow location. The demo receptor does not follow
+  the phone, so the demo shows no card.
 
 ## Notes
-- Location: "Always" is used so the user's server can keep the receptor near them when the
-  app is closed (significant-change monitoring only). Only a position rounded to 1 km is sent,
-  only to the linked server. The app works without "Always"; the home screen then warns that
-  the server follows the last place the app was opened.
+- Location: "Always" lets the user's server keep the receptor near them when the app is closed
+  (significant-change monitoring only). Only a position rounded to 1 km is sent, only to the linked server.
 - Notifications: time-sensitive. Critical Alerts are not requested in this version.
 - Camera: only to read the linking QR. The link can be pasted instead.
 - No purchases, ads, tracking or third-party SDKs. No data goes to the developer. Alerts pass
