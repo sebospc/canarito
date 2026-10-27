@@ -7,10 +7,6 @@ else. It runs an Android emulator on your computer, tells it that it is at your 
 sends its warnings to any device you subscribe: an iPhone, your mother's phone, a laptop, or
 a light in Home Assistant.
 
-> [!WARNING]
-> Canarito is a hack around a system we don't own. It is not official, it breaks Google's
-> terms, and it can miss an alert without telling you. Read [What can go wrong](#what-can-go-wrong).
-
 ## How it works
 
 <p align="center"><img src="docs/mesh.svg" alt="Quake, Google, receptors on your computer, ntfy, and any device that subscribes" width="100%"></p>
@@ -282,5 +278,10 @@ month. This repository keeps the part one family can run alone.
 Ideas nobody has built yet: read the emulator's real location age instead of rebooting every
 18 hours, and run one receptor for a whole neighborhood. Official access to the alert feed,
 from Google or a national seismological service, would make all of this unnecessary.
+
+> [!WARNING]
+> Canarito is a hack around a system we don't own. It is not official, it breaks Google's
+> terms, and it can miss an alert without telling you. Read [What can go wrong](#what-can-go-wrong).
+
 
 <p align="center"><sub>MIT license. Not affiliated with Google. Android Earthquake Alerts is a Google service. Display type: Bricolage Grotesque, SIL Open Font License.</sub></p>
