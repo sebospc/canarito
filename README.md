@@ -4,11 +4,9 @@
 
 Android phones get earthquake early warnings from Google. Canarito brings them to everything
 else. It runs an Android emulator on your computer, tells it that it is at your home, and
-sends its warnings to any device you subscribe: an iPhone, your mother's phone, a laptop, or
-a light in Home Assistant.
-
-On iPhone, use the free [Canarito app on the App Store](https://apps.apple.com/app/canarito/id6821447675).
-It pairs with your Canarito by a QR code, see [Connect your devices](#connect-your-devices).
+sends its warnings to your iPhone through the free
+[Canarito app](https://apps.apple.com/app/canarito/id6821447675), and to anything else you
+subscribe: your mother's phone, a laptop, or a light in Home Assistant.
 
 ## How it works
 
@@ -18,9 +16,10 @@ Google decides who gets an alert by the location the device reports, and an emul
 fake location is enough. In September 2026 real quakes in Colombia reached our emulators.
 The ones inside the alert radius got the warning; the ones 478 km away got nothing.
 
-You need no server. The emulator runs on your computer, and [ntfy](https://ntfy.sh), a free
-push service, carries the alert to your devices. If you want everything under your control,
-[run your own ntfy](https://docs.ntfy.sh/install/) and pass `--notify-url`.
+The emulator runs on your computer. The Canarito app gets the alert as a push from your
+computer. Other devices get it through [ntfy](https://ntfy.sh), a free push service. If you
+want everything under your control, [run your own ntfy](https://docs.ntfy.sh/install/) and pass
+`--notify-url`.
 
 ## Start
 
@@ -47,6 +46,16 @@ the line `AEA registered` in the log. Before it, the receptor cannot get anythin
 
 ## Connect your devices
 
+### iPhone: the Canarito app
+
+Install [Canarito from the App Store](https://apps.apple.com/app/canarito/id6821447675), free,
+no account. Your computer runs `canarito.py serve` behind an HTTPS address, and
+`canarito.py pair --name home --server-url https://…` shows a QR. Scan it with the iPhone. The
+app shows if a receptor covers you, moves a receptor that follows you when you travel, and
+opens the alert on screen with sound.
+
+### Everything else: ntfy
+
 <p align="center"><img src="docs/connect.svg" alt="Install ntfy, subscribe to your link, and the next alert arrives on that device" width="100%"></p>
 
 `setup` prints a private topic name such as `canarito-3f9a…`. In the ntfy app, tap **+**, type
@@ -62,15 +71,7 @@ topics before allowing notifications can leave the phone without push.
 
 On iPhone, ntfy cannot ring through silent mode or Focus: Apple keeps that for official alert
 apps. If you want something louder, a siren, a speaker or a light, subscribe it to the same
-link. Anything that can read ntfy can act on the alert. Pushover's iPhone app has Apple's
-Critical Alerts permission and can ring in silent mode; Canarito does not send to it yet, a
-pull request is welcome.
-
-On iPhone there is also the [Canarito app](https://apps.apple.com/app/canarito/id6821447675),
-free on the App Store. It does not use ntfy. Your computer runs `canarito.py serve` behind an
-HTTPS address, `canarito.py pair --name home --server-url https://…` shows a QR, and the
-iPhone scans it. The app then shows if a receptor covers you, sends its position to a receptor
-that follows it, and opens the alert on screen with sound.
+link. Anything that can read ntfy can act on the alert.
 
 `setup` also prints an admin link, for whoever runs the computer. Canarito uses it on its own:
 when the emulator stops answering, when Google's earthquake service does not start, when the
@@ -114,7 +115,8 @@ python3 canarito.py setup --name ana --follow --lat 4.711 --lon -74.072   # wher
 python3 canarito.py run --name ana
 ```
 
-Ana subscribes ntfy to her own alert link, installs OwnTracks
+With an iPhone, Ana pairs the Canarito app with `pair --name ana` and that is all: the app
+sends her position. Without it, she subscribes ntfy to her own alert link, installs OwnTracks
 ([iPhone](https://apps.apple.com/app/owntracks/id692424691),
 [Android](https://play.google.com/store/apps/details?id=org.owntracks.android)) and taps the
 message Canarito sends her. OwnTracks then posts her position to a private location link, and
