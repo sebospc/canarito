@@ -67,6 +67,12 @@ link. Anything that can read ntfy can act on the alert. Pushover's iPhone app ha
 Critical Alerts permission and can ring in silent mode; Canarito does not send to it yet, a
 pull request is welcome.
 
+On iPhone there is also the [Canarito app](https://apps.apple.com/app/canarito/id6821447675),
+free on the App Store. It does not use ntfy. Your computer runs `canarito.py serve` behind an
+HTTPS address, `canarito.py pair --name home --server-url https://…` shows a QR, and the
+iPhone scans it. The app then shows if a receptor covers you, sends its position to a receptor
+that follows it, and opens the alert on screen with sound.
+
 `setup` also prints an admin link, for whoever runs the computer. Canarito uses it on its own:
 when the emulator stops answering, when Google's earthquake service does not start, when the
 app could not be set up, and after the computer slept. It says so again when the problem
