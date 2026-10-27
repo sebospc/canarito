@@ -7,6 +7,9 @@ else. It runs an Android emulator on your computer, tells it that it is at your 
 sends its warnings to any device you subscribe: an iPhone, your mother's phone, a laptop, or
 a light in Home Assistant.
 
+On iPhone, use the free [Canarito app on the App Store](https://apps.apple.com/app/canarito/id6821447675).
+It pairs with your Canarito by a QR code, see [Connect your devices](#connect-your-devices).
+
 ## How it works
 
 <p align="center"><img src="docs/mesh.svg" alt="Quake, Google, receptors on your computer, ntfy, and any device that subscribes" width="100%"></p>
